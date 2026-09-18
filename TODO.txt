@@ -1,0 +1,20 @@
+- Create elemental arcana use logic with Element License
+- Prevent use of unobtained arcana slots
+- Implement applying reward send by others (relics and arcanas)
+- Implement Trap Location Logic
+- Implement Enemies and Item tracker
+- Implement Enemies Location Logic
+- Implement Boss Location Logic
+- Implement MiniBoss Location Logic
+- Implement Pinata Location Logic
+- Implement All Chest Location Logic
+- Implement Dungeon NPCs event Logic
+- Implement Dungeon Progression Location Logic
+- Implement Tracked Location Logic (Dash and destructible)
+- Create readme and archipelago setup
+- Implement relic upgrade slot item and check Logic
+- Deactivate Steam Achievment Logic
+- Slot Npc (deactivate ?)
+- Let player select price in apworld option
+- Fix : OUtfit shop UI bg size
+- Fix : TitleScreen 

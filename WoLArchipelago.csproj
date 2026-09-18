@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>.libs/Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>.libs/BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>.libs/UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>.libs/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>.libs/0Harmony.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Archipelago.MultiClient.Net" Version="6.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="UI/Sprites/AP.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+  <Compile Remove="wizardoflegend.apworld/**" />
+  <Content Remove="wizardoflegend.apworld/**" />
+  <None Remove="wizardoflegend.apworld/**" />
+</ItemGroup>
+</Project>

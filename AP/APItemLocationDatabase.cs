@@ -1,0 +1,249 @@
+using System;
+using System.Collections.Generic;
+
+public static class APItemLocationDatabase
+{
+
+    public static readonly Dictionary<long, string> ItemIdToName = new Dictionary<long, string>();
+    public static readonly Dictionary<string, long> ItemNameToId = new Dictionary<string, long>();
+
+    public static readonly Dictionary<long, string> LocationIdToName = new Dictionary<long, string>();
+    public static readonly Dictionary<string, long> LocationNameToId = new Dictionary<string, long>();
+
+    private static long baseLocationCode = 871130000;
+
+    static APItemLocationDatabase()
+    {
+        InitializeItems();
+        InitializeLocations();
+    }
+
+    public static string GetItemName(long id)
+    {
+        string name;
+        return ItemIdToName.TryGetValue(id, out name) ? name : "Unknown Item";
+    }
+
+    public static long GetItemId(string name)
+    {
+        long id;
+        return ItemNameToId.TryGetValue(name, out id) ? id : -1;
+    }
+
+    public static string GetLocationName(long id)
+    {
+        string name;
+        return LocationIdToName.TryGetValue(id, out name) ? name : "Unknown Location";
+    }
+
+    public static long GetLocationId(string name)
+    {
+        long id;
+        return LocationNameToId.TryGetValue(name, out id) ? id : -1;
+    }
+
+    private static void AddItem(string name, long id)
+    {
+        ItemNameToId[name] = id;
+        ItemIdToName[id] = name;
+    }
+
+    private static void AddLocation(string name)
+    {
+        LocationNameToId[name] = baseLocationCode;
+        LocationIdToName[baseLocationCode] = name;
+        baseLocationCode++;
+    }
+
+    private static void AddMultipleLocations(string baseName, int count)
+    {
+        for (int i = 1; i <= count; i++)
+        {
+            AddLocation(baseName + " " + i);
+        }
+    }
+
+    private static void InitializeItems()
+    {
+        // Progression
+        AddItem("Chaos Fragment", 871120001);
+        AddItem("Boss Key", 871120002);
+        AddItem("Shop Upgrade", 871120003);
+
+        // Licenses & Slots
+        AddItem("Standard Arcana Slot", 871122001);
+        AddItem("Signature Arcana Slot", 871122002);
+        AddItem("Bonus Arcana Slot 1", 871122003);
+        AddItem("Bonus Arcana Slot 2", 871122004);
+        AddItem("Fire Element License", 871122010);
+        AddItem("Water Element License", 871122011);
+        AddItem("Earth Element License", 871122012);
+        AddItem("Air Element License", 871122013);
+        AddItem("Lightning Element License", 871122014);
+
+        // Outfits
+        AddItem("Outfit: Hope", 871121001);
+        AddItem("Outfit: Patience", 871121002);
+        AddItem("Outfit: Vigor", 871121003);
+        AddItem("Outfit: Grit", 871121004);
+        AddItem("Outfit: Avarice", 871121005);
+        AddItem("Outfit: Spirit", 871121006);
+        AddItem("Outfit: Pace", 871121007);
+        AddItem("Outfit: Tempo", 871121008);
+        AddItem("Outfit: Shift", 871121009);
+        AddItem("Outfit: Awe", 871121010);
+        AddItem("Outfit: Fury", 871121011);
+        AddItem("Outfit: Rule", 871121012);
+        AddItem("Outfit: Level", 871121013);
+        AddItem("Outfit: Venture", 871121014);
+        AddItem("Outfit: Fall", 871121015);
+        AddItem("Outfit: Pride", 871121016);
+
+        // Stats & Upgrades
+        AddItem("Max HP Boost", 871123001);
+        AddItem("Gold Pack", 871123002);
+        AddItem("Chaos Gems Pack", 871123003);
+
+        // Traps
+        AddItem("Cursed Trap", 871124001);
+
+        // Generic Relics
+        AddItem("Relic Tier 1", 871125001);
+        AddItem("Relic Tier 2", 871125002);
+        AddItem("Relic Tier 3", 871125003);
+        AddItem("Relic Tier 4", 871125004);
+        AddItem("Relic Tier 5", 871125005);
+
+        // Generic Arcanas
+        AddItem("Arcana Tier 1", 871126001);
+        AddItem("Arcana Tier 2", 871126002);
+        AddItem("Arcana Tier 3", 871126003);
+        AddItem("Arcana Tier 4", 871126004);
+        AddItem("Arcana Tier 5", 871126005);
+
+        // Doctor Relics
+        AddItem("DoctorPrescription", 871125006);
+        AddItem("DoctorPlacebo", 871125007);
+        AddItem("DoctorDiscount", 871125008);
+        AddItem("DoctorVial", 871125009);
+        AddItem("CritHealChanceUp", 871125010);
+        AddItem("HealRestock", 871125011);
+        AddItem("DoctorHpDamage", 871125012);
+    }
+
+    private static void InitializeLocations()
+    {
+        // 1. BOSSES
+        string[] bosses = new string[]
+        {
+            "Flame Empress Zeal Defeated",
+            "Frost Queen Freiya Defeated",
+            "Earth Lord Atlas Defeated",
+            "Wind Sovereign Shuu Defeated",
+            "Lightning Maven Juno and Thunder Ace Suman Defeated",
+            "Master Sura Defeated"
+        };
+        foreach (string b in bosses) AddLocation(b);
+
+        string[] bossesX5 = new string[]
+        {
+            "Flame Empress Zeal Defeated 5 times",
+            "Frost Queen Freiya Defeated 5 times",
+            "Earth Lord Atlas Defeated 5 times",
+            "Wind Sovereign Shuu Defeated 5 times",
+            "Lightning Maven Juno and Thunder Ace Suman Defeated 5 times"
+        };
+        foreach (string b in bossesX5) AddLocation(b);
+
+        // 2. MINIBOSSES
+        string[] minibosses = new string[]
+        {
+            "Burst Mage",
+            "Counter Rogue",
+            "Crash Knight",
+            "Fleet Lancer",
+            "Grand Summoner",
+            "Strafe Archer",
+            "Crush Colossus"
+        };
+
+        foreach (string m in minibosses)
+        {
+            AddLocation(m + " Defeated");
+            AddLocation(m + " Defeated 5 times");
+            AddLocation(m + " Defeated 10 times");
+        }
+
+        // 3. ENEMIES
+        string[] enemies = new string[]
+        {
+            "Archer",
+            "Blob",
+            "Blob Barrager",
+            "Chaos Cyclops",
+            "Coffin Knight",
+            "Ghoul",
+            "Golem",
+            "Knight",
+            "Lancer",
+            "Macho Ghoul",
+            "Mage",
+            "Rogue",
+            "Roller Blob",
+            "Summoner",
+            "Turret"
+        };
+        foreach (string e in enemies)
+        {
+            AddLocation(e + " Defeated 50 times");
+            AddLocation(e + " Defeated 100 times");
+        }
+
+        AddLocation("Mimic Defeated 20 times");
+
+        // 4. SPAWN SHOPS
+        AddMultipleLocations("Outfit Shop Slot", 16);
+        AddMultipleLocations("Relic Shop Slot", 64);
+        AddMultipleLocations("Arcana Shop Slot", 64);
+
+        // 5. DUNGEON NPCS & EVENTS
+        AddMultipleLocations("Doctor Song Slot", 10);
+        AddMultipleLocations("Savile the Tailor Slot", 10);
+        AddMultipleLocations("Nox the Unfortunate Slot", 40);
+        AddMultipleLocations("Nocturne the Cardist Slot", 10);
+        AddMultipleLocations("Iris the Painter Slot", 5);
+        AddMultipleLocations("Jade the Gem Merchant Slot", 5);
+        AddMultipleLocations("Andres the Cartographer Slot", 5);
+        AddMultipleLocations("Petala the Herbalist Slot", 5);
+
+        AddLocation("Pinata Defeated");
+        AddLocation("Pinata Defeated 5 times");
+        AddLocation("Pinata Defeated 10 times");
+
+        // 6. CHESTS
+        AddMultipleLocations("Standard Chest Slot", 40);
+        AddMultipleLocations("Mini Chest Slot", 40);
+        AddMultipleLocations("MiniBoss Chest Slot", 40);
+        AddMultipleLocations("Boss Chest Slot", 40);
+        AddMultipleLocations("Party Chest Slot", 5);
+        AddMultipleLocations("Elemental Chest Slot", 5);
+
+        // 7. PROGRESSION & MILESTONES
+        AddLocation("Stage 1-1 Cleared");
+        AddLocation("Stage 1-2 Cleared");
+        AddLocation("Stage 2-1 Cleared");
+        AddLocation("Stage 2-2 Cleared");
+        AddLocation("Stage 3-1 Cleared");
+        AddLocation("Stage 3-2 Cleared");
+
+        AddLocation("First Council Member Defeated");
+        AddLocation("Second Council Member Defeated");
+        AddLocation("Third Council Member Defeated");
+
+        AddLocation("Break 100 Destructibles");
+        AddLocation("Break 500 Destructibles");
+
+        AddLocation("Dash 100 times");
+        AddLocation("Dash 500 times");
+    }
+}
