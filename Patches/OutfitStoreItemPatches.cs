@@ -1,7 +1,7 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(OutfitStoreItem))]
     public static class OutfitStoreItemPatches

@@ -81,6 +81,7 @@ namespace WoLArchipelago
                             offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
 
                             ItemHandler.CachedItems.AddRange(session.Items.AllItemsReceived);
+                            StatsManager.LoadStats();
                         }
 
                         session.Locations.ScoutLocationsAsync(scoutedInfo =>

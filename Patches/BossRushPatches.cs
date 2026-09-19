@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(BossRushNpc), nameof(BossRushNpc.Start))]
     public static class BossRushNpcStartPatch

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BepInEx;
+using UnityEngine;
 
 namespace WoLArchipelago
 {
@@ -94,6 +95,23 @@ namespace WoLArchipelago
             }
             catch (Exception ex) { Plugin.Log.LogError($"[AP] Error loading item index: {ex.Message}"); }
             return 0;
+        }
+
+        public static string GetStatsFilePath()
+        {
+            string apFolder = Path.Combine(Application.persistentDataPath, "AP_Saves");
+            
+            if (!string.IsNullOrEmpty(APManager.CurrentAPSavePrefix))
+            {
+                apFolder = Path.Combine(apFolder, APManager.CurrentAPSavePrefix);
+            }
+
+            if (!Directory.Exists(apFolder))
+            {
+                Directory.CreateDirectory(apFolder);
+            }
+
+            return Path.Combine(apFolder, "Stats.txt");
         }
     }
 }

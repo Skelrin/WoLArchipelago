@@ -2,7 +2,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(TitleScreen), "Start")]
     public static class TitleScreenStartPatch

@@ -1,7 +1,7 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(NextLevelLoader), nameof(NextLevelLoader.OnTriggerStay2D))]
     public static class NextLevelLoaderTriggerPatch
@@ -66,7 +66,7 @@ namespace WoLArchipelago
         [HarmonyPrefix]
         public static void Prefix()
         {
-            Patches.DashTrackerPatch.SaveDashesToDisk();
+            StatsManager.SaveStats();
         }
     }
 }

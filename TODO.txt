@@ -1,10 +1,10 @@
-- Implement All Chest Location Logic
-- Prevent use of unobtained arcana slots
+- Implement Dungeon NPCs event Logic
+- Prevent use of unobtained arcana slots (do not include chaos arcana)
+- Prevent looting arcana in chest dungeon (check chest loot table)
+- Implement Dungeon Progression Location Logic
 - Create elemental arcana use logic with Element License (check why not receiving first arcana before sending a check)
 - Implement applying reward send by others (relics and arcanas)
 - Implement Trap Location Logic
-- Implement Dungeon NPCs event Logic
-- Implement Dungeon Progression Location Logic
 - Implement deathlink
 - Create readme and archipelago setup
 - Implement relic upgrade slot item and check Logic
@@ -16,4 +16,3 @@
 - Fix : TitleScreen 
 - Fix : Victory Goal not triggered
 - Fix : Tracker Location when killing 1 Pinata giving check for 5, same for mobs and dash (check location id shift)
-- Fix : 

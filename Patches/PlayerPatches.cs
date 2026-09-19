@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(Player), nameof(Player.Start))]
     public static class PlayerInitPatch

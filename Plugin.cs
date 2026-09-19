@@ -12,7 +12,7 @@ namespace WoLArchipelago
     {
         public const string PluginGUID = "com.skelrin.wolarchipelago";
         public const string PluginName = "WoL Archipelago";
-        public const string PluginVersion = "0.2.0";
+        public const string PluginVersion = "0.3.0";
 
         public static Plugin Instance { get; private set; }
         public static ManualLogSource Log { get; private set; }
@@ -54,9 +54,9 @@ namespace WoLArchipelago
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            ItemStoreItemPatches.ClearSceneAssignments();
-            SkillStoreItemPatches.ClearSceneAssignments();
-            OutfitStoreItemPatches.ClearSceneAssignments();
+            Patches.ItemStoreItemPatches.ClearSceneAssignments();
+            Patches.SkillStoreItemPatches.ClearSceneAssignments();
+            Patches.OutfitStoreItemPatches.ClearSceneAssignments();
         }
 
         private void Start()

@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(SkillStoreItem))]
     public static class SkillStoreItemPatches
