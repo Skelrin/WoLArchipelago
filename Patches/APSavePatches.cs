@@ -47,4 +47,14 @@ namespace WoLArchipelago
             return true;
         }
     }
+
+    [HarmonyPatch(typeof(Application), "Quit")]
+    public class SaveOnQuitPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix()
+        {
+            Patches.DashTrackerPatch.SaveDashesToDisk();
+        }
+    }
 }

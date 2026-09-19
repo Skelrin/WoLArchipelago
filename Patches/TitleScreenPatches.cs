@@ -41,7 +41,7 @@ namespace WoLArchipelago
     public static class TitleScreenNavigationPatch
     {
         [HarmonyPrefix]
-        public static void Prefix(TitleScreen __instance, ref int newIndex, bool dirInput)
+        public static void Prefix(TitleScreen __instance, ref int newIndex)
         {
             if (newIndex == 1 || newIndex == 2)
             {

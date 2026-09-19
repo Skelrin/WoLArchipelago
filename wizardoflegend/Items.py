@@ -27,22 +27,6 @@ item_table: Dict[str, WoLItemData] = {
     "Shop Upgrade":             WoLItemData("Progression", 871120003, ItemClassification.progression, max_quantity=3),
 
     # -------------------------------------------------------------------------
-    # Arcana Slots & Licenses
-    # -------------------------------------------------------------------------
-    "Standard Arcana Slot":     WoLItemData("Licenses", 871122001, ItemClassification.progression),
-    "Signature Arcana Slot":    WoLItemData("Licenses", 871122002, ItemClassification.progression),
-    "Bonus Arcana Slot 1":      WoLItemData("Licenses", 871122003, ItemClassification.progression),
-    "Bonus Arcana Slot 2":      WoLItemData("Licenses", 871122004, ItemClassification.progression),
-
-    "Fire Element License":      WoLItemData("Licenses", 871122010, ItemClassification.progression),
-    "Water Element License":     WoLItemData("Licenses", 871122011, ItemClassification.progression),
-    "Earth Element License":     WoLItemData("Licenses", 871122012, ItemClassification.progression),
-    "Air Element License":       WoLItemData("Licenses", 871122013, ItemClassification.progression),
-    "Lightning Element License": WoLItemData("Licenses", 871122014, ItemClassification.progression),
-
-    # TODO : Add Relics Slots
-
-    # -------------------------------------------------------------------------
     # Outfits
     # -------------------------------------------------------------------------
     "Outfit: Hope":             WoLItemData("Outfits", 871121001, ItemClassification.useful),
@@ -61,6 +45,22 @@ item_table: Dict[str, WoLItemData] = {
     "Outfit: Venture":          WoLItemData("Outfits", 871121014, ItemClassification.useful),
     "Outfit: Fall":             WoLItemData("Outfits", 871121015, ItemClassification.useful),
     "Outfit: Pride":            WoLItemData("Outfits", 871121016, ItemClassification.useful),
+
+    # -------------------------------------------------------------------------
+    # Arcana Slots & Licenses
+    # -------------------------------------------------------------------------
+    "Standard Arcana Slot":     WoLItemData("Licenses", 871122001, ItemClassification.progression),
+    "Signature Arcana Slot":    WoLItemData("Licenses", 871122002, ItemClassification.progression),
+    "Bonus Arcana Slot 1":      WoLItemData("Licenses", 871122003, ItemClassification.progression),
+    "Bonus Arcana Slot 2":      WoLItemData("Licenses", 871122004, ItemClassification.progression),
+
+    "Fire Element License":      WoLItemData("Licenses", 871122010, ItemClassification.progression),
+    "Water Element License":     WoLItemData("Licenses", 871122011, ItemClassification.progression),
+    "Earth Element License":     WoLItemData("Licenses", 871122012, ItemClassification.progression),
+    "Air Element License":       WoLItemData("Licenses", 871122013, ItemClassification.progression),
+    "Lightning Element License": WoLItemData("Licenses", 871122014, ItemClassification.progression),
+
+    # TODO : Add Relics Slots
 
     # -------------------------------------------------------------------------
     # Stats & Upgrades
@@ -84,15 +84,6 @@ item_table: Dict[str, WoLItemData] = {
     "Relic Tier 5":             WoLItemData("Relics", 871125005, ItemClassification.useful, max_quantity=77),
 
     # -------------------------------------------------------------------------
-    # Generic Arcanas
-    # -------------------------------------------------------------------------
-    "Arcana Tier 1":            WoLItemData("Arcanas", 871126001, max_quantity=17),
-    "Arcana Tier 2":            WoLItemData("Arcanas", 871126002, max_quantity=30),
-    "Arcana Tier 3":            WoLItemData("Arcanas", 871126003, max_quantity=30),
-    "Arcana Tier 4":            WoLItemData("Arcanas", 871126004, ItemClassification.useful, max_quantity=40),
-    "Arcana Tier 5":            WoLItemData("Arcanas", 871126005, ItemClassification.useful, max_quantity=63),
-
-    # -------------------------------------------------------------------------
     # Doctor Relics
     # -------------------------------------------------------------------------
     "DoctorPrescription":       WoLItemData("Doctor Relics", 871125006),
@@ -102,4 +93,13 @@ item_table: Dict[str, WoLItemData] = {
     "CritHealChanceUp":         WoLItemData("Doctor Relics", 871125010),
     "HealRestock":              WoLItemData("Doctor Relics", 871125011),
     "DoctorHpDamage":           WoLItemData("Doctor Relics", 871125012),
+
+    # -------------------------------------------------------------------------
+    # Generic Arcanas
+    # -------------------------------------------------------------------------
+    "Arcana Tier 1":            WoLItemData("Arcanas", 871126001, max_quantity=17),
+    "Arcana Tier 2":            WoLItemData("Arcanas", 871126002, max_quantity=30),
+    "Arcana Tier 3":            WoLItemData("Arcanas", 871126003, max_quantity=30),
+    "Arcana Tier 4":            WoLItemData("Arcanas", 871126004, ItemClassification.useful, max_quantity=40),
+    "Arcana Tier 5":            WoLItemData("Arcanas", 871126005, ItemClassification.useful, max_quantity=63),
 }

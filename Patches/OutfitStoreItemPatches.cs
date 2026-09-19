@@ -50,7 +50,7 @@ namespace WoLArchipelago
 
         [HarmonyPrefix]
         [HarmonyPatch(nameof(OutfitStoreItem.Buy))]
-        public static bool BuyPrefix(OutfitStoreItem __instance, Player player)
+        public static bool BuyPrefix(OutfitStoreItem __instance)
         {
             return ShopService.ProcessPurchase(
                 __instance.gameObject,

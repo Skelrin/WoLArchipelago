@@ -24,36 +24,27 @@ def _add_multiple_locations(base_name: str, count: int, category: str):
 
 # 1. BOSSES
 bosses = [
-    "Flame Empress Zeal Defeated",
-    "Frost Queen Freiya Defeated",
-    "Earth Lord Atlas Defeated",
-    "Wind Sovereign Shuu Defeated",
-    "Lightning Maven Juno and Thunder Ace Suman Defeated",
-    "Master Sura Defeated"
+    "AirBoss",
+    "EarthBoss",
+    "FireBoss",
+    "IceBoss",
+    "LightningBoss"
 ]
 for b in bosses:
-    _add_location(b, "Boss")
+    _add_location(f"{b} Defeated", "Boss")
+    _add_location(f"{b} Defeated 5 times", "Boss")
 
-bosses_x5 = [
-    "Flame Empress Zeal Defeated 5 times",
-    "Frost Queen Freiya Defeated 5 times",
-    "Earth Lord Atlas Defeated 5 times",
-    "Wind Sovereign Shuu Defeated 5 times",
-    "Lightning Maven Juno and Thunder Ace Suman Defeated 5 times"
-]
-for b in bosses_x5:
-    _add_location(b, "Boss")
-
+_add_location("FinalBoss Defeated", "Boss")
 
 # 2. MINIBOSSES
 minibosses = [
-    "Burst Mage", 
-    "Counter Rogue", 
-    "Crash Knight", 
-    "Fleet Lancer",
-    "Grand Summoner", 
-    "Strafe Archer", 
-    "Crush Colossus"
+    "SuperArcher", 
+    "SuperCoffin", 
+    "SuperKnight", 
+    "SuperLancer",
+    "SuperMage", 
+    "SuperRogue", 
+    "SuperSummoner"
 ]
 for m in minibosses:
     _add_location(f"{m} Defeated", "Miniboss")
@@ -63,28 +54,26 @@ for m in minibosses:
 
 # 3. ENEMIES
 enemies = [
-    "Archer", 
     "Blob", 
-    "Blob Barrager", 
-    "Chaos Cyclops", 
-    "Coffin Knight", 
-    "Ghoul", 
-    "Golem", 
+    "BlobRoller", 
+    "Ghoul",
+    "EnemyTurret", 
+    "Archer", 
     "Knight", 
-    "Lancer", 
-    "Macho Ghoul", 
     "Mage", 
     "Rogue", 
-    "Roller Blob", 
-    "Summoner", 
-    "Turret"
+    "Lancer", 
+    "Summoner"
 ]
 for e in enemies:
     _add_location(f"{e} Defeated 50 times", "Enemies")
     _add_location(f"{e} Defeated 100 times", "Enemies")
 
-_add_location("Mimic Defeated 20 times", "Enemies")
+_add_location("MimicEnemy Defeated 20 times", "Enemies")
 
+_add_location("Pinata Defeated", "Dungeon")
+_add_location("Pinata Defeated 5 times", "Dungeon")
+_add_location("Pinata Defeated 10 times", "Dungeon")
 
 # 4. SPAWN SHOPS
 _add_multiple_locations("Outfit Shop Slot", 16, "Spawn Shops")
@@ -101,11 +90,6 @@ _add_multiple_locations("Iris the Painter Slot", 5, "Dungeon")
 _add_multiple_locations("Jade the Gem Merchant Slot", 5, "Dungeon")
 _add_multiple_locations("Andres the Cartographer Slot", 5, "Dungeon")
 _add_multiple_locations("Petala the Herbalist Slot", 5, "Dungeon")
-
-_add_location("Pinata Defeated", "Dungeon")
-_add_location("Pinata Defeated 5 times", "Dungeon")
-_add_location("Pinata Defeated 10 times", "Dungeon")
-
 
 # 6. CHESTS
 _add_multiple_locations("Standard Chest Slot", 40, "Chests")
@@ -128,8 +112,11 @@ _add_location("First Council Member Defeated", "Progression")
 _add_location("Second Council Member Defeated", "Progression")
 _add_location("Third Council Member Defeated", "Progression")
 
-_add_location("Break 100 Destructibles", "Milestones")
-_add_location("Break 500 Destructibles", "Milestones")
+_add_location("Break 50 Paintings", "Milestones")
+_add_location("Break 100 Paintings", "Milestones")
+
+_add_location("Die 10 times", "Milestones")
+_add_location("Fall 50 times", "Milestones")
 
 _add_location("Dash 100 times", "Milestones")
 _add_location("Dash 500 times", "Milestones")

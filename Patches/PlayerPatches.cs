@@ -23,7 +23,7 @@ namespace WoLArchipelago
     public static class InstantKillPatch
     {
         [HarmonyPrefix]
-        public static void Prefix(Health __instance, ref AttackInfo givenAttackInfo)
+        public static void Prefix(ref AttackInfo givenAttackInfo)
         {
             if (DebugController.GodModeActive && givenAttackInfo != null && givenAttackInfo.entity is Player)
             {

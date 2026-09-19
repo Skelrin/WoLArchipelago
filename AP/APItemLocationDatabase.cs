@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 public static class APItemLocationDatabase
@@ -70,17 +69,6 @@ public static class APItemLocationDatabase
         AddItem("Boss Key", 871120002);
         AddItem("Shop Upgrade", 871120003);
 
-        // Licenses & Slots
-        AddItem("Standard Arcana Slot", 871122001);
-        AddItem("Signature Arcana Slot", 871122002);
-        AddItem("Bonus Arcana Slot 1", 871122003);
-        AddItem("Bonus Arcana Slot 2", 871122004);
-        AddItem("Fire Element License", 871122010);
-        AddItem("Water Element License", 871122011);
-        AddItem("Earth Element License", 871122012);
-        AddItem("Air Element License", 871122013);
-        AddItem("Lightning Element License", 871122014);
-
         // Outfits
         AddItem("Outfit: Hope", 871121001);
         AddItem("Outfit: Patience", 871121002);
@@ -99,6 +87,18 @@ public static class APItemLocationDatabase
         AddItem("Outfit: Fall", 871121015);
         AddItem("Outfit: Pride", 871121016);
 
+        // Licenses & Slots
+        AddItem("Standard Arcana Slot", 871122001);
+        AddItem("Signature Arcana Slot", 871122002);
+        AddItem("Bonus Arcana Slot 1", 871122003);
+        AddItem("Bonus Arcana Slot 2", 871122004);
+
+        AddItem("Fire Element License", 871122010);
+        AddItem("Water Element License", 871122011);
+        AddItem("Earth Element License", 871122012);
+        AddItem("Air Element License", 871122013);
+        AddItem("Lightning Element License", 871122014);
+
         // Stats & Upgrades
         AddItem("Max HP Boost", 871123001);
         AddItem("Gold Pack", 871123002);
@@ -114,13 +114,6 @@ public static class APItemLocationDatabase
         AddItem("Relic Tier 4", 871125004);
         AddItem("Relic Tier 5", 871125005);
 
-        // Generic Arcanas
-        AddItem("Arcana Tier 1", 871126001);
-        AddItem("Arcana Tier 2", 871126002);
-        AddItem("Arcana Tier 3", 871126003);
-        AddItem("Arcana Tier 4", 871126004);
-        AddItem("Arcana Tier 5", 871126005);
-
         // Doctor Relics
         AddItem("DoctorPrescription", 871125006);
         AddItem("DoctorPlacebo", 871125007);
@@ -129,42 +122,44 @@ public static class APItemLocationDatabase
         AddItem("CritHealChanceUp", 871125010);
         AddItem("HealRestock", 871125011);
         AddItem("DoctorHpDamage", 871125012);
+
+        // Generic Arcanas
+        AddItem("Arcana Tier 1", 871126001);
+        AddItem("Arcana Tier 2", 871126002);
+        AddItem("Arcana Tier 3", 871126003);
+        AddItem("Arcana Tier 4", 871126004);
+        AddItem("Arcana Tier 5", 871126005);
     }
 
     private static void InitializeLocations()
     {
         // 1. BOSSES
-        string[] bosses = new string[]
+        string[] bosses =
+        [
+            "AirBoss",
+            "EarthBoss",
+            "FireBoss",
+            "IceBoss",
+            "LightningBoss"
+        ];
+        foreach (string m in bosses)
         {
-            "Flame Empress Zeal Defeated",
-            "Frost Queen Freiya Defeated",
-            "Earth Lord Atlas Defeated",
-            "Wind Sovereign Shuu Defeated",
-            "Lightning Maven Juno and Thunder Ace Suman Defeated",
-            "Master Sura Defeated"
-        };
-        foreach (string b in bosses) AddLocation(b);
+            AddLocation(m + " Defeated");
+            AddLocation(m + " Defeated 5 times");
+        }
 
-        string[] bossesX5 = new string[]
-        {
-            "Flame Empress Zeal Defeated 5 times",
-            "Frost Queen Freiya Defeated 5 times",
-            "Earth Lord Atlas Defeated 5 times",
-            "Wind Sovereign Shuu Defeated 5 times",
-            "Lightning Maven Juno and Thunder Ace Suman Defeated 5 times"
-        };
-        foreach (string b in bossesX5) AddLocation(b);
+        AddLocation("FinalBoss Defeated");
 
         // 2. MINIBOSSES
-        string[] minibosses = new string[]
+        string[] minibosses =
         {
-            "Burst Mage",
-            "Counter Rogue",
-            "Crash Knight",
-            "Fleet Lancer",
-            "Grand Summoner",
-            "Strafe Archer",
-            "Crush Colossus"
+            "SuperArcher", 
+            "SuperCoffin", 
+            "SuperKnight", 
+            "SuperLancer",
+            "SuperMage", 
+            "SuperRogue", 
+            "SuperSummoner"
         };
 
         foreach (string m in minibosses)
@@ -175,23 +170,18 @@ public static class APItemLocationDatabase
         }
 
         // 3. ENEMIES
-        string[] enemies = new string[]
+        string[] enemies =
         {
-            "Archer",
-            "Blob",
-            "Blob Barrager",
-            "Chaos Cyclops",
-            "Coffin Knight",
-            "Ghoul",
-            "Golem",
-            "Knight",
-            "Lancer",
-            "Macho Ghoul",
-            "Mage",
-            "Rogue",
-            "Roller Blob",
-            "Summoner",
-            "Turret"
+            "Blob", 
+            "BlobRoller", 
+            "Ghoul", 
+            "EnemyTurret", 
+            "Archer", 
+            "Knight", 
+            "Mage", 
+            "Rogue", 
+            "Lancer", 
+            "Summoner"
         };
         foreach (string e in enemies)
         {
@@ -199,7 +189,11 @@ public static class APItemLocationDatabase
             AddLocation(e + " Defeated 100 times");
         }
 
-        AddLocation("Mimic Defeated 20 times");
+        AddLocation("MimicEnemy Defeated 20 times");
+
+        AddLocation("Pinata Defeated");
+        AddLocation("Pinata Defeated 5 times");
+        AddLocation("Pinata Defeated 10 times");
 
         // 4. SPAWN SHOPS
         AddMultipleLocations("Outfit Shop Slot", 16);
@@ -215,10 +209,6 @@ public static class APItemLocationDatabase
         AddMultipleLocations("Jade the Gem Merchant Slot", 5);
         AddMultipleLocations("Andres the Cartographer Slot", 5);
         AddMultipleLocations("Petala the Herbalist Slot", 5);
-
-        AddLocation("Pinata Defeated");
-        AddLocation("Pinata Defeated 5 times");
-        AddLocation("Pinata Defeated 10 times");
 
         // 6. CHESTS
         AddMultipleLocations("Standard Chest Slot", 40);
@@ -240,8 +230,11 @@ public static class APItemLocationDatabase
         AddLocation("Second Council Member Defeated");
         AddLocation("Third Council Member Defeated");
 
-        AddLocation("Break 100 Destructibles");
-        AddLocation("Break 500 Destructibles");
+        AddLocation("Break 50 Paintings");
+        AddLocation("Break 100 Paintings");
+
+        AddLocation("Die 10 times");
+        AddLocation("Fall 50 times");
 
         AddLocation("Dash 100 times");
         AddLocation("Dash 500 times");

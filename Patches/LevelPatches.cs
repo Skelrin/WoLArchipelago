@@ -59,4 +59,14 @@ namespace WoLArchipelago
             return true;
         }
     }
+
+    [HarmonyPatch(typeof(GameController), "LoadLevel")]
+    public static class SaveOnLevelChangePatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix()
+        {
+            Patches.DashTrackerPatch.SaveDashesToDisk();
+        }
+    }
 }
