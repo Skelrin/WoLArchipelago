@@ -200,15 +200,14 @@ public static class APItemLocationDatabase
         AddMultipleLocations("Relic Shop Slot", 64);
         AddMultipleLocations("Arcana Shop Slot", 64);
 
-        // 5. DUNGEON NPCS & EVENTS
+        // 5. NPCS
         AddMultipleLocations("Doctor Song Slot", 10);
         AddMultipleLocations("Savile the Tailor Slot", 10);
         AddMultipleLocations("Nox the Unfortunate Slot", 40);
         AddMultipleLocations("Nocturne the Cardist Slot", 10);
-        AddMultipleLocations("Iris the Painter Slot", 5);
-        AddMultipleLocations("Jade the Gem Merchant Slot", 5);
-        AddMultipleLocations("Andres the Cartographer Slot", 5);
-        AddMultipleLocations("Petala the Herbalist Slot", 5);
+        AddMultipleLocations("Cremire the Collector Slot", 10);
+        AddMultipleLocations("Doki the Banker Slot", 10);
+        AddMultipleLocations("Strange Time Keeper Slot", 5);
 
         // 6. CHESTS
         AddMultipleLocations("Standard Chest Slot", 40);

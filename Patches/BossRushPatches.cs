@@ -4,7 +4,7 @@ using HarmonyLib;
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(BossRushNpc), nameof(BossRushNpc.Start))]
-    public static class BossRushNpcStartPatch
+    public class BossRushNpcStartPatch
     {
         private static readonly AccessTools.FieldRef<RunModifier, Dictionary<string, RunMod>> RunModsRef =
             AccessTools.FieldRefAccess<RunModifier, Dictionary<string, RunMod>>("runMods");
@@ -34,7 +34,7 @@ namespace WoLArchipelago.Patches
     }
 
     [HarmonyPatch(typeof(BossRushNpc), nameof(BossRushNpc.HandleConditionalInteraction))]
-    public static class BossRushNpcInteractionPatch
+    public class BossRushNpcInteractionPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(BossRushNpc __instance, ref bool __result)

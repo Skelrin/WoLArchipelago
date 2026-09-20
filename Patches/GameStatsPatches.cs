@@ -1,12 +1,11 @@
 using HarmonyLib;
-using System.Collections.Generic;
-using System.IO;
 
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(GameData.GameStats), "EnemyDefeated")]
     public class GameStatsEnemyDefeatedPatch
     {
+        [HarmonyPostfix]
         public static void Postfix(GameData.GameStats __instance, string name)
         {
             int count = __instance.GetEnemyDefeatedCount(name);
@@ -28,6 +27,7 @@ namespace WoLArchipelago.Patches
     [HarmonyPatch(typeof(GameData.GameStats), "UpdateIntStatValue")]
     public class GameStatsUpdateIntStatValuePatch
     {
+        [HarmonyPostfix]
         public static void Postfix(GameData.GameStats __instance, GameData.Stat givenStat)
         {
             int total = __instance.GetIntStatValue(givenStat);
@@ -61,19 +61,19 @@ namespace WoLArchipelago.Patches
     }
 
     [HarmonyPatch(typeof(Player.SkillState), "BaseOnEnter")]
-    public static class DashTrackerPatch
+    public class DashTrackerPatch
     {
         [HarmonyPostfix]
         public static void Postfix(Player.SkillState __instance)
         {
             if (__instance == null || !__instance.isDash) return;
 
-            if (StatsManager.TotalDashes >= 500) return;
+            if (Services.StatsManager.TotalDashes >= 500) return;
 
-            StatsManager.TotalDashes++;
-            StatsManager.SaveStats();
+            Services.StatsManager.TotalDashes++;
+            Services.StatsManager.SaveStats();
 
-            int dashes = StatsManager.TotalDashes;
+            int dashes = Services.StatsManager.TotalDashes;
             if (dashes == 100 || dashes == 500)
             {
                 string locationName = "Dash " + dashes + " times";

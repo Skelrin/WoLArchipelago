@@ -54,7 +54,7 @@ namespace WoLArchipelago
         [HarmonyPrefix]
         public static void Prefix()
         {
-            StatsManager.SaveStats();
+            Services.StatsManager.SaveStats();
         }
     }
 }

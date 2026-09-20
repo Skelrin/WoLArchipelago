@@ -1,18 +1,16 @@
-- Implement Dungeon NPCs event Logic
-- Prevent use of unobtained arcana slots (do not include chaos arcana)
-- Prevent looting arcana in chest dungeon (check chest loot table)
 - Implement Dungeon Progression Location Logic
+- Prevent use of unobtained arcana slots (do not include chaos arcana, test behaviour with Doctor Song)
+- Prevent unlocking arcana in chest dungeon (mainboss chest)
 - Create elemental arcana use logic with Element License (check why not receiving first arcana before sending a check)
 - Implement applying reward send by others (relics and arcanas)
-- Implement Trap Location Logic
-- Implement deathlink
-- Create readme and archipelago setup
 - Implement relic upgrade slot item and check Logic
+- Implement Trap Location Logic
 - Deactivate Steam Achievment Logic
-- Slot Npc (deactivate ?)
-- Let player select price in apworld option
+- Create readme and archipelago setup
 
 - Fix : Outfit shop UI bg size
 - Fix : TitleScreen 
 - Fix : Victory Goal not triggered
-- Fix : Tracker Location when killing 1 Pinata giving check for 5, same for mobs and dash (check location id shift)
+
+- Bonus : Let player select price in apworld option
+- Bonus : Implement deathlink

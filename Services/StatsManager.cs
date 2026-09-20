@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Services
 {
-    public static class StatsManager
+    public class StatsManager
     {
         public static int TotalDashes { get; set; } = 0;
         public static int TotalStandardChests { get; set; } = 0;

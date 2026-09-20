@@ -17,7 +17,7 @@ def create_regions(world, player):
         if category == "Spawn Shops":
             target_region = regions["Plaza"]
 
-        elif loc_name == "FinalBoss Defeated":
+        elif "Strange Time Keeper" in loc_name or loc_name == "FinalBoss Defeated":
             target_region = regions["Final Boss"]
 
         elif "Stage 3" in loc_name or loc_name == "Third Council Member Defeated":

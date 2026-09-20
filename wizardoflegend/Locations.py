@@ -86,10 +86,9 @@ _add_multiple_locations("Doctor Song Slot", 10, "Dungeon")
 _add_multiple_locations("Savile the Tailor Slot", 10, "Dungeon")
 _add_multiple_locations("Nox the Unfortunate Slot", 40, "Dungeon")
 _add_multiple_locations("Nocturne the Cardist Slot", 10, "Dungeon")
-_add_multiple_locations("Iris the Painter Slot", 5, "Dungeon")
-_add_multiple_locations("Jade the Gem Merchant Slot", 5, "Dungeon")
-_add_multiple_locations("Andres the Cartographer Slot", 5, "Dungeon")
-_add_multiple_locations("Petala the Herbalist Slot", 5, "Dungeon")
+_add_multiple_locations("Cremire the Collector Slot", 10, "Dungeon")
+_add_multiple_locations("Doki the Banker Slot", 10, "Dungeon")
+_add_multiple_locations("Strange Time Keeper Slot", 5, "Dungeon")
 
 # 6. CHESTS
 _add_multiple_locations("Standard Chest Slot", 40, "Chests")

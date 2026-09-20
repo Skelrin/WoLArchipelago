@@ -5,11 +5,13 @@ namespace WoLArchipelago
     public class DebugController : MonoBehaviour
     {
         public static bool BypassBoss { get; private set; } = false;
+
+        public static bool tpLastBoss { get; private set; } = false;
         public static bool GodModeActive { get; private set; } = false;
 
-        public static bool CanEnterNextBossStage(int tierCount, int stageCount)
+        public bool CanEnterNextBossStage(int tierCount, int stageCount)
         {
-            return BypassBoss || ItemHandler.CanAccessBossStage(tierCount, stageCount);
+            return BypassBoss || Services.ItemHandler.CanAccessBossStage(tierCount, stageCount);
         }
 
         private void Update()
@@ -37,6 +39,28 @@ namespace WoLArchipelago
             if (Input.GetKeyDown(KeyCode.F4))
             {
                 ToggleGodMode();
+            }
+
+            // F5: TP to Npc
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                TeleportToDoctorNpc();
+                TeleportToCremireNpc();
+                TeleportToTailorNpc();
+                TeleportToBankerNpc();
+                TeleportToShufflerNpc();
+            }
+
+            // F6: Unlock tokens
+            if (Input.GetKeyDown(KeyCode.F6))
+            {
+                UnlockTokens();
+            }
+
+            // F8: Tp Stage 2-3
+            if (Input.GetKeyDown(KeyCode.F8))
+            {
+                tpLastBoss = !tpLastBoss;
             }
         }
 
@@ -76,6 +100,80 @@ namespace WoLArchipelago
                 player.transform.position = altar.transform.position;
                 player.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
             }
+        }
+
+        private void TeleportToDoctorNpc()
+        {
+            Player player = FindObjectOfType<Player>();
+            if (player == null) return;
+
+            DoctorNpc doctor = FindObjectOfType<DoctorNpc>();
+            if (doctor != null)
+            {
+                player.transform.position = doctor.transform.position;
+                player.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+            }
+        }
+
+        private void TeleportToCremireNpc()
+        {
+            Player player = FindObjectOfType<Player>();
+            if (player == null) return;
+
+            CollectorNpc doctor = FindObjectOfType<CollectorNpc>();
+            if (doctor != null)
+            {
+                player.transform.position = doctor.transform.position;
+                player.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+            }
+        }
+
+        private void TeleportToTailorNpc()
+        {
+            Player player = FindObjectOfType<Player>();
+            if (player == null) return;
+
+            TailorNpc doctor = FindObjectOfType<TailorNpc>();
+            if (doctor != null)
+            {
+                player.transform.position = doctor.transform.position;
+                player.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+            }
+        }
+
+        private void TeleportToBankerNpc()
+        {
+            Player player = FindObjectOfType<Player>();
+            if (player == null) return;
+
+            BankerNpc doctor = FindObjectOfType<BankerNpc>();
+            if (doctor != null)
+            {
+                player.transform.position = doctor.transform.position;
+                player.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+            }
+        }
+
+        private void TeleportToShufflerNpc()
+        {
+            Player player = FindObjectOfType<Player>();
+            if (player == null) return;
+
+            ShufflerNpc doctor = FindObjectOfType<ShufflerNpc>();
+            if (doctor != null)
+            {
+                player.transform.position = doctor.transform.position;
+                player.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+            }
+        }
+
+        private void UnlockTokens()
+        {
+            Item.IsUnlocked("TokenCollector", setUnlocked: true);
+            Item.IsUnlocked("TokenShuffler", setUnlocked: true);
+            Item.IsUnlocked("TokenDoctor", setUnlocked: true);
+            Item.IsUnlocked("TokenTailor", setUnlocked: true);
+            Item.IsUnlocked("TokenBanker", setUnlocked: true);
         }
     }
 }

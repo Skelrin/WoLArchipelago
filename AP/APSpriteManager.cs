@@ -27,7 +27,7 @@ namespace WoLArchipelago
             {
                 if (stream == null)
                 {
-                    Plugin.Log.LogError($"[AP] Ressource introuvable : {resourceName}");
+                    Plugin.Log.LogError($"[AP] Resource not found : {resourceName}");
                     return null;
                 }
 

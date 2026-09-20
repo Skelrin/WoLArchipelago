@@ -12,7 +12,7 @@ namespace WoLArchipelago
     {
         public const string PluginGUID = "com.skelrin.wolarchipelago";
         public const string PluginName = "WoL Archipelago";
-        public const string PluginVersion = "0.3.0";
+        public const string PluginVersion = "0.4.0";
 
         public static Plugin Instance { get; private set; }
         public static ManualLogSource Log { get; private set; }
@@ -27,7 +27,7 @@ namespace WoLArchipelago
             Instance = this;
             Log = Logger;
 
-            StorageService.InitProfile();
+            Services.StorageService.InitProfile();
             AP = new APManager();
 
             gameObject.AddComponent<ArchipelagoUI>();

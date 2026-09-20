@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Archipelago.MultiClient.Net.Models;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Services
 {
-    public static class ItemHandler
+    public class ItemHandler
     {
         public static List<ItemInfo> CachedItems { get; set; } = new List<ItemInfo>();
 

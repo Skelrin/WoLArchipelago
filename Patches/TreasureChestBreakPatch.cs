@@ -3,7 +3,7 @@ using HarmonyLib;
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(TreasureChest), nameof(TreasureChest.Break))]
-    public static class TreasureChestBreakPatch
+    public class TreasureChestBreakPatch
     {
         [HarmonyPrefix]
         public static void Prefix(TreasureChest __instance)
@@ -12,7 +12,7 @@ namespace WoLArchipelago.Patches
             {
                 string chestTypeName = __instance.chestType.ToString();
                 
-                int currentCount = StatsManager.IncrementChestCount(chestTypeName);
+                int currentCount = Services.StatsManager.IncrementChestCount(chestTypeName);
                 if (currentCount <= 0) return;
 
                 string locationName = chestTypeName + " Chest Slot " + currentCount;

@@ -4,7 +4,7 @@ using System.IO;
 using BepInEx;
 using UnityEngine;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Services
 {
     public class StorageService
     {

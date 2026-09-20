@@ -3,25 +3,27 @@ using HarmonyLib;
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(SkillStoreItem))]
-    public static class SkillStoreItemPatches
+    public class SkillStoreItemPatches
     {
-        private static readonly string[] SlotFormats = { "Arcana Shop Slot {0}" };
+        private static readonly string SlotFormat = "Arcana Shop Slot {0}";
 
-        public static void ClearSceneAssignments() => ShopService.ClearSceneAssignments();
+        public static void ClearSceneAssignments() => Services.ShopService.ClearSceneAssignments();
 
         [HarmonyPostfix]
         [HarmonyPatch(nameof(SkillStoreItem.Start))]
         public static void StartPostfix(SkillStoreItem __instance)
         {
-            if (!ShopService.TryGetNextLocation(SlotFormats, ShopService.GetMaxShopSlots(), out long locId, out string locName))
+            if (__instance.isShufflerItem) return;
+
+            if (!Services.ShopService.TryGetNextLocation(SlotFormat, Services.ShopService.GetMaxShopSlots(), out long locId, out string locName))
             {
-                ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
+                Services.ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
                 return;
             }
 
             Traverse.Create(__instance).Field("initialized").SetValue(true);
 
-            int defaultCost = __instance.usePlatinumCost ? 20 : 150;
+            int defaultCost = __instance.usePlatinumCost ? 20 : 125;
             __instance.costStat?.Initialize(defaultCost);
 
             if (__instance.priceMarker != null)
@@ -47,7 +49,9 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(nameof(SkillStoreItem.Buy))]
         public static bool BuyPrefix(SkillStoreItem __instance)
         {
-            return ShopService.ProcessPurchase(
+            if (__instance.isShufflerItem) return true;
+
+            return Services.ShopService.ProcessPurchase(
                 __instance.gameObject,
                 __instance.priceMarker,
                 __instance.Cost,

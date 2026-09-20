@@ -3,7 +3,7 @@ using HarmonyLib;
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(Player), nameof(Player.Start))]
-    public static class PlayerInitPatch
+    public class PlayerInitPatch
     {
         [HarmonyPostfix]
         public static void Postfix(Player __instance)
@@ -20,7 +20,7 @@ namespace WoLArchipelago.Patches
     }
 
     [HarmonyPatch(typeof(Health), nameof(Health.TakeDamage))]
-    public static class InstantKillPatch
+    public class InstantKillPatch
     {
         [HarmonyPrefix]
         public static void Prefix(ref AttackInfo givenAttackInfo)

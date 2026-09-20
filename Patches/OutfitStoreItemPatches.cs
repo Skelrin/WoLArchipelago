@@ -4,19 +4,19 @@ using UnityEngine;
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(OutfitStoreItem))]
-    public static class OutfitStoreItemPatches
+    public class OutfitStoreItemPatches
     {
-        private static readonly string[] SlotFormats = { "Outfit Shop Slot {0}" };
+        private static readonly string SlotFormat = "Outfit Shop Slot {0}";
 
-        public static void ClearSceneAssignments() => ShopService.ClearSceneAssignments();
+        public static void ClearSceneAssignments() => Services.ShopService.ClearSceneAssignments();
 
         [HarmonyPostfix]
         [HarmonyPatch(nameof(OutfitStoreItem.Start))]
         public static void StartPostfix(OutfitStoreItem __instance)
         {
-            if (!ShopService.TryGetNextLocation(SlotFormats, 16, out long locId, out string locName))
+            if (!Services.ShopService.TryGetNextLocation(SlotFormat, 16, out long locId, out string locName))
             {
-                ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
+                Services.ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
                 return;
             }
 
@@ -52,7 +52,7 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(nameof(OutfitStoreItem.Buy))]
         public static bool BuyPrefix(OutfitStoreItem __instance)
         {
-            return ShopService.ProcessPurchase(
+            return Services.ShopService.ProcessPurchase(
                 __instance.gameObject,
                 __instance.priceMarker,
                 __instance.Cost,

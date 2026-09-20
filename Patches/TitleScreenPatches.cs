@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(TitleScreen), "Start")]
-    public static class TitleScreenStartPatch
+    public class TitleScreenStartPatch
     {
         [HarmonyPostfix]
         public static void Postfix(TitleScreen __instance)
@@ -38,7 +38,7 @@ namespace WoLArchipelago.Patches
     }
 
     [HarmonyPatch(typeof(TitleScreen), nameof(TitleScreen.SelectMenuIndex), new System.Type[] { typeof(int), typeof(bool) })]
-    public static class TitleScreenNavigationPatch
+    public class TitleScreenNavigationPatch
     {
         [HarmonyPrefix]
         public static void Prefix(TitleScreen __instance, ref int newIndex)
@@ -62,7 +62,7 @@ namespace WoLArchipelago.Patches
     }
 
     [HarmonyPatch(typeof(TitleScreen), nameof(TitleScreen.ConfirmMenuOption))]
-    public static class TitleScreenConfirmPatch
+    public class TitleScreenConfirmPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(TitleScreen __instance)

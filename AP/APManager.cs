@@ -16,13 +16,13 @@ namespace WoLArchipelago
         private string lastSlot;
         private string lastPassword;
         private readonly object lockObject = new object();
-        private readonly StorageService storageService = new StorageService();
+        private readonly Services.StorageService storageService = new Services.StorageService();
         private readonly HashSet<long> checkedLocations = new HashSet<long>();
         public Dictionary<long, ScoutedItemInfo> ScoutedLocations { get; private set; } = new Dictionary<long, ScoutedItemInfo>();
         private Queue<long> offlineCheckQueue = new Queue<long>();
         private int itemsReceivedIndex = 0;
         private readonly Queue<long> itemsToProcess = new Queue<long>();
-        public static string CurrentAPSavePrefix => StorageService.CurrentAPSavePrefix;
+        public static string CurrentAPSavePrefix => Services.StorageService.CurrentAPSavePrefix;
         public bool IsConnected { get; private set; }
         public string StatusMessage { get; private set; } = "Disconnected";
         public int StartingArcanaMode { get; private set; }
@@ -32,7 +32,7 @@ namespace WoLArchipelago
 
         public APManager()
         {
-            StorageService.InitProfile();
+            Services.StorageService.InitProfile();
             offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
             itemsReceivedIndex = storageService.LoadItemIndex();
         }
@@ -75,13 +75,13 @@ namespace WoLArchipelago
                             checkedLocations.Clear();
                             offlineCheckQueue.Clear();
                             itemsToProcess.Clear();
-                            ItemHandler.CachedItems.Clear();
+                            Services.ItemHandler.CachedItems.Clear();
 
                             itemsReceivedIndex = storageService.LoadItemIndex();
                             offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
 
-                            ItemHandler.CachedItems.AddRange(session.Items.AllItemsReceived);
-                            StatsManager.LoadStats();
+                            Services.ItemHandler.CachedItems.AddRange(session.Items.AllItemsReceived);
+                            Services.StatsManager.LoadStats();
                         }
 
                         session.Locations.ScoutLocationsAsync(scoutedInfo =>
@@ -182,6 +182,11 @@ namespace WoLArchipelago
             Plugin.Log.LogWarning("[Archipelago] Offline mode active.");
         }
 
+        public HashSet<long> GetCheckedLocation()
+        {
+            return checkedLocations;
+        }
+
         public void SendLocationCheck(long locationId)
         {
             lock (lockObject)
@@ -226,8 +231,8 @@ namespace WoLArchipelago
         {
             lock (lockObject)
             {
-                ItemHandler.CachedItems.Clear();
-                ItemHandler.CachedItems.AddRange(helper.AllItemsReceived);
+                Services.ItemHandler.CachedItems.Clear();
+                Services.ItemHandler.CachedItems.AddRange(helper.AllItemsReceived);
 
                 while (itemsReceivedIndex < helper.AllItemsReceived.Count)
                 {
@@ -246,7 +251,7 @@ namespace WoLArchipelago
                 while (itemsToProcess.Count > 0)
                 {
                     long itemId = itemsToProcess.Dequeue();
-                    ItemHandler.GrantPlayerAPItem(itemId);
+                    Services.ItemHandler.GrantPlayerAPItem(itemId);
                 }
             }
         }

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Services
 {
-    public static class ShopService
+    public class ShopService
     {
         private static readonly HashSet<long> assignedLocationsInScene = new HashSet<long>();
 
@@ -19,32 +19,27 @@ namespace WoLArchipelago
             return Mathf.Min((ItemHandler.GetTotalShopUpgrade() + 1) * 16, 64);
         }
 
-        public static bool TryGetNextLocation(string[] slotNameFormats, int maxSlots, out long locId, out string locName)
+        public static bool TryGetNextLocation(string slotNameFormat, int maxSlots, out long locId, out string locName)
         {
             locId = -1;
             locName = string.Empty;
 
-            if (Plugin.AP == null || !Plugin.AP.IsConnected) return false;
-
             for (int slotIndex = 1; slotIndex <= maxSlots; slotIndex++)
             {
-                foreach (string format in slotNameFormats)
+                string candidateName = string.Format(slotNameFormat, slotIndex);
+                long candidateId = APItemLocationDatabase.GetLocationId(candidateName);
+
+                if (candidateId == -1) continue;
+
+                bool isChecked = Plugin.AP.GetCheckedLocation().Contains(candidateId);
+                bool isAlreadySpawned = assignedLocationsInScene.Contains(candidateId);
+
+                if (!isChecked && !isAlreadySpawned)
                 {
-                    string candidateName = string.Format(format, slotIndex);
-                    long candidateId = APItemLocationDatabase.GetLocationId(candidateName);
-
-                    if (candidateId == -1) continue;
-
-                    bool isChecked = Plugin.AP.session.Locations.AllLocationsChecked.Contains(candidateId);
-                    bool isAlreadySpawned = assignedLocationsInScene.Contains(candidateId);
-
-                    if (!isChecked && !isAlreadySpawned)
-                    {
-                        locId = candidateId;
-                        locName = candidateName;
-                        assignedLocationsInScene.Add(candidateId);
-                        return true;
-                    }
+                    locId = candidateId;
+                    locName = candidateName;
+                    assignedLocationsInScene.Add(candidateId);
+                    return true;
                 }
             }
 
@@ -88,7 +83,6 @@ namespace WoLArchipelago
                 Plugin.AP.SendLocationCheck(apSlot.LocationId);
 
                 SoundManager.PlayAudio("MenuBuy");
-                GameUI.BroadcastNoticeMessage($"AP Check Sent: {apSlot.LocationName}!");
 
                 onSuccess?.Invoke();
                 DestroyShopItem(gameObject, priceMarker);
