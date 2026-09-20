@@ -20,6 +20,11 @@ namespace WoLArchipelago.Patches
             if (locId != -1)
             {
                 Plugin.AP.SendLocationCheck(locId);
+
+                if (locationName.Equals("FinalBoss Defeated"))
+                {
+                    Plugin.AP.CompleteGoal();
+                }
             }
         }
     }

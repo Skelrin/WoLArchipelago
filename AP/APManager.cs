@@ -29,12 +29,14 @@ namespace WoLArchipelago
         public int ElementLicensesMode { get; private set; }
         public static int ChaosFragmentsRequired { get; private set; }
         public string StartingElement { get; private set; }
+        private bool pendingGoalCompletion = false;
 
         public APManager()
         {
             Services.StorageService.InitProfile();
             offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
             itemsReceivedIndex = storageService.LoadItemIndex();
+            pendingGoalCompletion = storageService.LoadGoalCompletion();
         }
 
         public void Connect(string host, int port, string slotName, string password = null, bool isReconnecting = false)
@@ -182,6 +184,25 @@ namespace WoLArchipelago
             Plugin.Log.LogWarning("[Archipelago] Offline mode active.");
         }
 
+        public void CompleteGoal()
+        {
+            lock (lockObject)
+            {
+                pendingGoalCompletion = true;
+                storageService.SaveGoalCompletion(true);
+
+                if (IsConnected && session != null)
+                {
+                    Plugin.Log.LogInfo("[Archipelago] Goal completed!");
+                    session.SetGoalAchieved();
+                }
+                else
+                {
+                    Plugin.Log.LogWarning("[Archipelago] Goal completed offline. Saved for next connection.");
+                }
+            }
+        }
+
         public HashSet<long> GetCheckedLocation()
         {
             return checkedLocations;
@@ -223,6 +244,11 @@ namespace WoLArchipelago
                     }
                     session.Locations.CompleteLocationChecks(toSend.ToArray());
                     storageService.SavePendingChecks(offlineCheckQueue);
+                }
+
+                if (pendingGoalCompletion)
+                {
+                    session.SetGoalAchieved();
                 }
             }
         }

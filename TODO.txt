@@ -1,4 +1,3 @@
-- Implement Dungeon Progression Location Logic
 - Prevent use of unobtained arcana slots (do not include chaos arcana, test behaviour with Doctor Song)
 - Prevent unlocking arcana in chest dungeon (mainboss chest)
 - Create elemental arcana use logic with Element License (check why not receiving first arcana before sending a check)
@@ -10,7 +9,6 @@
 
 - Fix : Outfit shop UI bg size
 - Fix : TitleScreen 
-- Fix : Victory Goal not triggered
 
 - Bonus : Let player select price in apworld option
 - Bonus : Implement deathlink

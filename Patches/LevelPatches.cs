@@ -6,67 +6,100 @@ namespace WoLArchipelago.Patches
     [HarmonyPatch(typeof(NextLevelLoader), nameof(NextLevelLoader.OnTriggerStay2D))]
     public class NextLevelLoaderTriggerPatch
     {
-        private static float lastMessageTime = 0f;
-        private static readonly AccessTools.FieldRef<NextLevelLoader, Player> playerRef = AccessTools.FieldRefAccess<NextLevelLoader, Player>("player");
-        private static readonly AccessTools.FieldRef<NextLevelLoader, bool> portalEnteredRef = AccessTools.FieldRefAccess<NextLevelLoader, bool>("portalEntered");
+        private const float MessageCooldown = 1.0f;
+        private static float lastMessageTime;
+
+        private static readonly AccessTools.FieldRef<NextLevelLoader, Player> playerRef = 
+            AccessTools.FieldRefAccess<NextLevelLoader, Player>("player");
+        private static readonly AccessTools.FieldRef<NextLevelLoader, bool> portalEnteredRef = 
+            AccessTools.FieldRefAccess<NextLevelLoader, bool>("portalEntered");
+
+        private static readonly string[] CouncilLevels = { "First", "Second", "Third" };
 
         [HarmonyPrefix]
         public static bool Prefix(NextLevelLoader __instance, Collider2D col)
         {
-            int currentTier = GameController.tierCount;
-            int currentStage = GameController.stageCount;
-
             if (DebugController.tpLastBoss)
             {
                 GameController.tierCount = 2;
                 GameController.stageCount = 2;
             }
 
-            if (currentStage == 2)
+            int currentTier = GameController.tierCount;
+            int currentStage = GameController.stageCount;
+
+            if (IsStageLocked(currentTier, currentStage))
             {
-                if (!(DebugController.BypassBoss || Services.ItemHandler.CanAccessBossStage(currentTier, currentStage)))
+                Player player = Player.CheckForPlayer(col);
+                if (player != null && player.IsAvailable && player.inputDevice.GetButtonDown("Interact"))
                 {
-                    Player player = Player.CheckForPlayer(col);
-                    if (player != null && player.IsAvailable && player.inputDevice.GetButtonDown("Interact"))
+                    if (Time.time - lastMessageTime > MessageCooldown)
                     {
-                        if (Time.time - lastMessageTime > 1.0f)
-                        {
-                            int keysNeeded = currentTier == 0 ? 1 : (currentTier == 1 ? 2 : 3);
-                            GameUI.BroadcastNoticeMessage($"Boss locked! Requires {keysNeeded} Key(s) (Have: {Services.ItemHandler.GetTotalBossKeys()}/3)");
-                            SoundManager.PlayAudio("MenuError");
-                            lastMessageTime = Time.time;
-                        }
-                        playerRef(__instance) = null;
-                        portalEnteredRef(__instance) = false;
+                        DisplayRequirements(currentTier, currentStage);
+                        lastMessageTime = Time.time;
                     }
-                    return false;
+                    playerRef(__instance) = null;
+                    portalEnteredRef(__instance) = false;
                 }
+                return false;
             }
-            else if (currentTier == 2 && currentStage == 3)
-            {
-                if (!(DebugController.BypassBoss || Services.ItemHandler.CanAccessFinalBossStage()))
-                {
-                    Player player = Player.CheckForPlayer(col);
-                    if (player != null && player.IsAvailable && player.inputDevice.GetButtonDown("Interact"))
-                    {
-                        if (Time.time - lastMessageTime > 1.0f)
-                        {
-                            GameUI.BroadcastNoticeMessage($"Final Boss locked! Requires {APManager.ChaosFragmentsRequired} Chaos Fragment(s) (Have: {Services.ItemHandler.GetTotalChaosFragment()}/{APManager.ChaosFragmentsRequired})");
-                            SoundManager.PlayAudio("MenuError");
-                            lastMessageTime = Time.time;
-                        }
-                        playerRef(__instance) = null;
-                        portalEnteredRef(__instance) = false;
-                    }
-                    return false;
-                }
-            }
+
+            ProcessLocationCheck(currentTier, currentStage);
 
             return true;
         }
+
+        private static bool IsStageLocked(int tier, int stage)
+        {
+            if (DebugController.BypassBoss) return false;
+
+            if (stage == 2)
+                return !Services.ItemHandler.CanAccessBossStage(tier, stage);
+
+            if (tier == 2 && stage == 3)
+                return !Services.ItemHandler.CanAccessFinalBossStage();
+
+            return false;
+        }
+
+        private static void DisplayRequirements(int tier, int stage)
+        {
+            SoundManager.PlayAudio("MenuError");
+
+            if (stage == 2)
+            {
+                int keysNeeded = tier + 1;
+                int haveKeys = Services.ItemHandler.GetTotalBossKeys();
+                GameUI.BroadcastNoticeMessage($"Boss locked! Requires {keysNeeded} Key(s) (Have: {haveKeys}/3)");
+            }
+            else
+            {
+                int req = APManager.ChaosFragmentsRequired;
+                int have = Services.ItemHandler.GetTotalChaosFragment();
+                GameUI.BroadcastNoticeMessage($"Final Boss locked! Requires {req} Chaos Fragment(s) (Have: {have}/{req})");
+            }
+        }
+
+        private static void ProcessLocationCheck(int tier, int stage)
+        {
+            string candidateName = stage != 3
+                ? $"Stage {tier + 1}-{stage} Cleared"
+                : $"{GetCouncilLevelName(tier)} Council Member Defeated";
+
+            long locId = APItemLocationDatabase.GetLocationId(candidateName);
+            if (locId != -1 && !Plugin.AP.GetCheckedLocation().Contains(locId))
+            {
+                Plugin.AP.SendLocationCheck(locId);
+            }
+        }
+
+        private static string GetCouncilLevelName(int tier)
+        {
+            return (tier >= 0 && tier < CouncilLevels.Length) ? CouncilLevels[tier] : "Unknown";
+        }
     }
 
-    [HarmonyPatch(typeof(GameController), "LoadLevel")]
+    [HarmonyPatch(typeof(GameController), nameof(GameController.LoadLevel))]
     public class SaveOnLevelChangePatch
     {
         [HarmonyPrefix]

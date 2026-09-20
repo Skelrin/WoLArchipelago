@@ -13,6 +13,7 @@ namespace WoLArchipelago.Services
 
         private string PendingChecksFilePath => Path.Combine(Paths.ConfigPath, $"{CurrentAPSavePrefix}_PendingChecks.txt");
         private string ItemIndexFilePath => Path.Combine(Paths.ConfigPath, $"{CurrentAPSavePrefix}_ItemIndex.txt");
+        private string GoalFilePath => Path.Combine(Paths.ConfigPath, $"{CurrentAPSavePrefix}_Goal.txt");
 
         public static void InitProfile()
         {
@@ -95,6 +96,28 @@ namespace WoLArchipelago.Services
             }
             catch (Exception ex) { Plugin.Log.LogError($"[AP] Error loading item index: {ex.Message}"); }
             return 0;
+        }
+
+        public void SaveGoalCompletion(bool isCompleted)
+        {
+            try
+            {
+                File.WriteAllText(GoalFilePath, isCompleted.ToString());
+            }
+            catch (Exception ex) { Plugin.Log.LogError($"[AP] Error saving goal completion: {ex.Message}"); }
+        }
+
+        public bool LoadGoalCompletion()
+        {
+            try
+            {
+                if (File.Exists(GoalFilePath) && bool.TryParse(File.ReadAllText(GoalFilePath), out bool isCompleted))
+                {
+                    return isCompleted;
+                }
+            }
+            catch (Exception ex) { Plugin.Log.LogError($"[AP] Error loading goal completion: {ex.Message}"); }
+            return false;
         }
 
         public static string GetStatsFilePath()
