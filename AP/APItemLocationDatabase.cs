@@ -74,11 +74,11 @@ public static class APItemLocationDatabase
         AddItem("Outfit: Patience", 871121002);
         AddItem("Outfit: Vigor", 871121003);
         AddItem("Outfit: Grit", 871121004);
-        AddItem("Outfit: Avarice", 871121005);
-        AddItem("Outfit: Spirit", 871121006);
+        AddItem("Outfit: Greed", 871121005);
+        AddItem("Outfit: Pink", 871121006);
         AddItem("Outfit: Pace", 871121007);
         AddItem("Outfit: Tempo", 871121008);
-        AddItem("Outfit: Shift", 871121009);
+        AddItem("Outfit: Switch", 871121009);
         AddItem("Outfit: Awe", 871121010);
         AddItem("Outfit: Fury", 871121011);
         AddItem("Outfit: Rule", 871121012);

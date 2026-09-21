@@ -27,8 +27,6 @@ namespace WoLArchipelago.Patches
                         textComp.text = "CONNECT TO ARCHIPELAGO";
                     }
                 }
-
-                Plugin.Log.LogInfo("[AP UI] Title screen modified successfully!");
             }
             catch (System.Exception ex)
             {

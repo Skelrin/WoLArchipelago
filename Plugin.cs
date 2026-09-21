@@ -12,7 +12,7 @@ namespace WoLArchipelago
     {
         public const string PluginGUID = "com.skelrin.wolarchipelago";
         public const string PluginName = "WoL Archipelago";
-        public const string PluginVersion = "0.4.0";
+        public const string PluginVersion = "0.5.0";
 
         public static Plugin Instance { get; private set; }
         public static ManualLogSource Log { get; private set; }
@@ -32,8 +32,6 @@ namespace WoLArchipelago
 
             gameObject.AddComponent<ArchipelagoUI>();
             gameObject.AddComponent<DebugController>();
-
-            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         private void OnDestroy()
@@ -90,7 +88,10 @@ namespace WoLArchipelago
                 }
             }
 
-            AP?.ProcessIncomingItems();
+            if (AP != null)
+            {
+                AP.ProcessIncomingItems();
+            }
         }
 
         public static void ExecuteOnMainThread(Action action)

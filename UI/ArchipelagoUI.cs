@@ -27,7 +27,6 @@ namespace WoLArchipelago
         public void Toggle()
         {
             showUI = !showUI;
-            GameUI.BroadcastNoticeMessage($"Archipelago Menu: {(showUI ? "SHOWN" : "HIDDEN")}");
         }
 
         public void Hide() => showUI = false;

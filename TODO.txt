@@ -1,9 +1,6 @@
-- Prevent use of unobtained arcana slots (do not include chaos arcana, test behaviour with Doctor Song)
-- Prevent unlocking arcana in chest dungeon (mainboss chest)
+- Prevent use of unobtained arcana slots (test behaviour with Doctor Song)
 - Create elemental arcana use logic with Element License (check why not receiving first arcana before sending a check)
-- Implement applying reward send by others (relics and arcanas)
 - Implement relic upgrade slot item and check Logic
-- Implement Trap Location Logic
 - Deactivate Steam Achievment Logic
 - Create readme and archipelago setup
 
@@ -12,3 +9,4 @@
 
 - Bonus : Let player select price in apworld option
 - Bonus : Implement deathlink
+- Bonus : Diversify traps

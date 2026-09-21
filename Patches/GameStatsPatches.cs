@@ -10,7 +10,6 @@ namespace WoLArchipelago.Patches
         {
             int count = __instance.GetEnemyDefeatedCount(name);
 
-            Plugin.Log.LogInfo($"Name : {name} Count : {count}");
             string locationName = (count == 1) 
                 ? $"{name} Defeated" 
                 : $"{name} Defeated {count} times";

@@ -10,6 +10,8 @@ namespace WoLArchipelago.Patches
         {
             if (__instance == null) return;
 
+            Services.ItemHandler.SyncPlayerMaxHP(__instance, true);
+
             if (DebugController.GodModeActive && __instance.health != null)
             {
                 __instance.health.healthStat.AddMod(new NumVarStatMod("GodModeHP", 99999f, 10, VarStatModType.Override, fillToNewMax: true));

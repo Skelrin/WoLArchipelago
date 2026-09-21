@@ -113,14 +113,14 @@ namespace WoLArchipelago
                     {
                         IsConnected = false;
                         StatusMessage = $"Failed: {string.Join(", ", failure.Errors)}";
-                        Plugin.Log.LogError($"[Archipelago] {StatusMessage}");
+                        Plugin.Log.LogError($"[AP] {StatusMessage}");
                     }
                 }
                 catch (Exception ex)
                 {
                     IsConnected = false;
                     StatusMessage = $"Error: {ex.Message}";
-                    Plugin.Log.LogError($"[Archipelago] Connection error: {ex}");
+                    Plugin.Log.LogError($"[AP] Connection error: {ex}");
                 }
             });
         }
@@ -150,7 +150,7 @@ namespace WoLArchipelago
         {
             IsConnected = false;
             StatusMessage = "Connection Lost!";
-            Plugin.Log.LogWarning($"[Archipelago] Connection lost: {reason}. Attempting reconnect...");
+            Plugin.Log.LogWarning($"[AP] Connection lost: {reason}. Attempting reconnect...");
 
             Plugin.ExecuteOnMainThread(() =>
             {
@@ -181,7 +181,7 @@ namespace WoLArchipelago
             }
             IsConnected = false;
             StatusMessage = "Offline";
-            Plugin.Log.LogWarning("[Archipelago] Offline mode active.");
+            Plugin.Log.LogWarning("[AP] Offline mode active.");
         }
 
         public void CompleteGoal()
@@ -193,12 +193,12 @@ namespace WoLArchipelago
 
                 if (IsConnected && session != null)
                 {
-                    Plugin.Log.LogInfo("[Archipelago] Goal completed!");
+                    Plugin.Log.LogInfo("[AP] Goal completed!");
                     session.SetGoalAchieved();
                 }
                 else
                 {
-                    Plugin.Log.LogWarning("[Archipelago] Goal completed offline. Saved for next connection.");
+                    Plugin.Log.LogWarning("[AP] Goal completed offline. Saved for next connection.");
                 }
             }
         }
@@ -218,7 +218,7 @@ namespace WoLArchipelago
 
                 if (IsConnected && session != null)
                 {
-                    Plugin.Log.LogInfo($"[Archipelago] Sending check: {locationId}");
+                    Plugin.Log.LogInfo($"[AP] Sending check: {locationId}");
                     session.Locations.CompleteLocationChecks(locationId);
                 }
                 else
