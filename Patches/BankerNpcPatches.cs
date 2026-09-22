@@ -11,7 +11,7 @@ namespace WoLArchipelago.Patches
         {
             bool goldTraded = Traverse.Create(__instance).Field<bool>("goldTraded").Value;
 
-            string locName = $"Doki the Banker Slot {0}";
+            string locName = "Doki the Banker Slot {0}";
             
             if (goldTraded)
             {

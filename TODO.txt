@@ -1,11 +1,10 @@
-- Prevent use of unobtained arcana slots (test behaviour with Doctor Song)
 - Create elemental arcana use logic with Element License (check why not receiving first arcana before sending a check)
 - Implement relic upgrade slot item and check Logic
-- Deactivate Steam Achievment Logic
 - Create readme and archipelago setup
 
 - Fix : Outfit shop UI bg size
-- Fix : TitleScreen 
+- Fix : TitleScreen
+- Fix : Doctor relic not dropping
 
 - Bonus : Let player select price in apworld option
 - Bonus : Implement deathlink

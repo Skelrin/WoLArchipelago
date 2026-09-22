@@ -32,7 +32,7 @@ namespace WoLArchipelago.Patches
 
             RunData.miscNurseRoomFound = true;
 
-            string locName = $"Doctor Song Slot {0}";
+            string locName = "Doctor Song Slot {0}";
 
             Services.CheckHandler.SendNpcCheck(locName, 10);
 

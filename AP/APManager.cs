@@ -34,6 +34,7 @@ namespace WoLArchipelago
         public APManager()
         {
             Services.StorageService.InitProfile();
+            Services.ItemHandler.CachedItems.Clear();
             offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
             itemsReceivedIndex = storageService.LoadItemIndex();
             pendingGoalCompletion = storageService.LoadGoalCompletion();
@@ -63,12 +64,14 @@ namespace WoLArchipelago
                     {
                         IsConnected = true;
                         StatusMessage = "Online";
+
                         storageService.SetAPSaveProfile(session.RoomState.Seed, slotName);
 
                         ParseSlotData(loginSuccess.SlotData);
 
                         Plugin.ExecuteOnMainThread(() =>
                         {
+                            GameDataManager.Load();
                             ArchipelagoUI.Instance?.ToggleHasConnectedOnce();
                         });
 
@@ -83,6 +86,15 @@ namespace WoLArchipelago
                             offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
 
                             Services.ItemHandler.CachedItems.AddRange(session.Items.AllItemsReceived);
+
+                            while (itemsReceivedIndex < session.Items.AllItemsReceived.Count)
+                            {
+                                ItemInfo item = session.Items.AllItemsReceived[itemsReceivedIndex];
+                                itemsToProcess.Enqueue(item.ItemId);
+                                itemsReceivedIndex++;
+                                storageService.SaveItemIndex(itemsReceivedIndex);
+                            }
+
                             Services.StatsManager.LoadStats();
                         }
 
@@ -94,17 +106,17 @@ namespace WoLArchipelago
                             }
                         }, new List<long>(session.Locations.AllLocations).ToArray());
 
-                        if (!isReconnecting)
-                        {
-                            Plugin.StartAPRun();
-                        }
-
                         session.Items.ItemReceived += OnItemReceived;
                         session.Socket.SocketClosed += OnSocketClosed;
 
                         foreach (long locationId in session.Locations.AllLocationsChecked)
                         {
                             checkedLocations.Add(locationId);
+                        }
+
+                        if (!isReconnecting)
+                        {
+                            Plugin.StartAPRun();
                         }
 
                         FlushOfflineQueue();

@@ -62,6 +62,11 @@ namespace WoLArchipelago.Services
             return null;
         }
 
+        public static bool IsItemUnlocked(long itemId)
+        {
+            return CachedItems != null && CachedItems.Exists(item => item.ItemId == itemId);
+        }
+
         public static int GetItemCountByName(string name)
         {
             int count = 0;
@@ -325,6 +330,7 @@ namespace WoLArchipelago.Services
             else
             {
                 GameUI.BroadcastNoticeMessage($"[AP] {itemName} Received");
+                GameUI.RefreshCDUI();
             }
         }
 

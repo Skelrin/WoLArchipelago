@@ -9,7 +9,7 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch("OnCardSelected")]
         public static void OnCardSelectedPostfix()
         {
-            string locName = $"Nocturne the Cardist Slot {0}";
+            string locName = "Nocturne the Cardist Slot {0}";
 
             Services.CheckHandler.SendNpcCheck(locName, 10);
         }
