@@ -8,8 +8,8 @@ namespace WoLArchipelago
     {
         public static readonly int[] SlotItemIds = new int[]
         {
-            0,          // Slot 0 (Basic) — débloqué par défaut
-            0,          // Slot 1 (Dash) — débloqué par défaut
+            0,          // Slot 0 (Basic)
+            0,          // Slot 1 (Dash)
             871122001,  // Slot 2 (Standard Arcana Slot)
             871122002,  // Slot 3 (Signature Arcana Slot)
             871122003,  // Slot 4 (Bonus Arcana Slot 1)
