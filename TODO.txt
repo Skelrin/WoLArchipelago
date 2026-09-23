@@ -1,5 +1,5 @@
-- Create elemental arcana use logic with Element License (check why not receiving first arcana before sending a check)
 - Implement relic upgrade slot item and check Logic
+- Implement Location logic by tierCount to block player
 - Create readme and archipelago setup
 
 - Fix : Outfit shop UI bg size
@@ -9,3 +9,4 @@
 - Bonus : Let player select price in apworld option
 - Bonus : Implement deathlink
 - Bonus : Diversify traps
+- Bonus : Queue traps to prevent applying them in hub or all of them when entering the dungeon

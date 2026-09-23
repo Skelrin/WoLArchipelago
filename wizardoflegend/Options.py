@@ -17,12 +17,12 @@ class ChaosFragmentsTotal(Range):
 
 class StartingArcanaMode(Choice):
     """Set starting Arcanas
-    - Vanilla : Default basic and dash arcana at start.
-    - Random Element : Random basic and dash arcana of the same element.
+    - Vanilla : Default starting arcana.
+    - Randomize : Randomize all starting arcana slots.
     """
     display_name = "Starting Arcana Mode"
     option_vanilla = 0
-    option_random_element = 1
+    option_randomize = 1
     default = 1
 
 class ElementLicensesMode(Choice):

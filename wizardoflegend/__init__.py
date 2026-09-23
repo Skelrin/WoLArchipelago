@@ -18,13 +18,19 @@ class WoLWorld(World):
             self.options.chaos_fragments_required.value = self.options.chaos_fragments_total.value
 
         self.starting_element = None
-        if self.options.starting_arcana_mode.value == self.options.starting_arcana_mode.option_random_element:
+
+        is_starting_arcana_random = self.options.starting_arcana_mode.value == self.options.starting_arcana_mode.option_randomize
+        is_licenses_enabled = self.options.element_licenses_mode.value == self.options.element_licenses_mode.option_required
+
+        if is_starting_arcana_random and is_licenses_enabled:
             elements = ["Fire", "Water", "Earth", "Air", "Lightning"]
             self.starting_element = self.random.choice(elements)
-            
-            if self.options.element_licenses_mode.value == self.options.element_licenses_mode.option_required:
-                license_name = f"{self.starting_element} Element License"
-                self.multiworld.push_precollected(self.create_item(license_name))
+            license_name = f"{self.starting_element} Element License"
+            self.multiworld.push_precollected(self.create_item(license_name))
+
+        elif not is_starting_arcana_random and is_licenses_enabled:
+            self.starting_element = "Air"
+            self.multiworld.push_precollected(self.create_item("Air Element License"))
 
     def create_regions(self):
         create_regions(self, self.player)
@@ -38,7 +44,9 @@ class WoLWorld(World):
         for _ in range(self.options.chaos_fragments_total.value):
             item_pool.append(self.create_item("Chaos Fragment"))
 
-        if self.options.element_licenses_mode:
+        is_licenses_enabled = self.options.element_licenses_mode.value == self.options.element_licenses_mode.option_required
+
+        if is_licenses_enabled:
             licenses = [
                 "Fire Element License", 
                 "Water Element License",

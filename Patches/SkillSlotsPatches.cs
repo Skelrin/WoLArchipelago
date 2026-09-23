@@ -235,6 +235,7 @@ namespace WoLArchipelago.Patches
         }
 
         // Rewriting PickupSkill logic to manage locked skill slot :
+        // if player has activated element_licenses_mode, we first check if it has the license of the skill
         // if it's a basic or dash skill it replaces the current one and drop it (as intended)
         // if it's a signature skill and its skill slot is unlocked it replaces the current one else it goes to the stockSkill slot
         // if it's a standard skill it searches the first standard slot unlocked and empty, if there isn't it places it in the stockskill
@@ -251,6 +252,8 @@ namespace WoLArchipelago.Patches
 
             public static bool Prefix(Player __instance, string givenID, bool isSignature, bool isEmpowered)
             {
+                if (!SlotManager.PlayerHasLicenseToPickupSkill(__instance.GetSkill(givenID))) {return false; }
+
                 int num = -1;
 
                 if (isSignature)

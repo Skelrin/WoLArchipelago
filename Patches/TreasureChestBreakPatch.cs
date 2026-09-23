@@ -19,7 +19,7 @@ namespace WoLArchipelago.Patches
             {
                 string chestTypeName = __instance.chestType.ToString();
                 
-                int currentCount = Services.StatsManager.IncrementChestCount(chestTypeName);
+                int currentCount = Services.DataManager.IncrementChestCount(chestTypeName);
                 if (currentCount <= 0) return;
 
                 string locationName = chestTypeName + " Chest Slot " + currentCount;

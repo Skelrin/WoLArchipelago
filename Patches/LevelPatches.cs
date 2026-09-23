@@ -105,7 +105,7 @@ namespace WoLArchipelago.Patches
         [HarmonyPrefix]
         public static void Prefix()
         {
-            Services.StatsManager.SaveStats();
+            Services.DataManager.SaveData();
         }
     }
 }

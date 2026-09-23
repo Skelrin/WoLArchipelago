@@ -72,12 +72,11 @@ namespace WoLArchipelago.Patches
         {
             if (__instance == null || !__instance.isDash) return;
 
-            if (Services.StatsManager.TotalDashes >= 500) return;
+            if (Services.DataManager.TotalDashes >= 500) return;
 
-            Services.StatsManager.TotalDashes++;
-            Services.StatsManager.SaveStats();
+            Services.DataManager.TotalDashes++;
 
-            int dashes = Services.StatsManager.TotalDashes;
+            int dashes = Services.DataManager.TotalDashes;
             if (dashes == 100 || dashes == 500)
             {
                 string locationName = "Dash " + dashes + " times";

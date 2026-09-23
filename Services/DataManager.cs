@@ -4,7 +4,7 @@ using System.IO;
 
 namespace WoLArchipelago.Services
 {
-    public class StatsManager
+    public class DataManager
     {
         public static int TotalDashes { get; set; } = 0;
         public static int TotalStandardChests { get; set; } = 0;
@@ -13,10 +13,11 @@ namespace WoLArchipelago.Services
         public static int TotalBossChests { get; set; } = 0;
         public static int TotalElementalChests { get; set; } = 0;
         public static int TotalPartyChests { get; set; } = 0;
+        public static bool IsStartingInventoryApplied { get; set; } = false;
 
-        public static void LoadStats()
+        public static void LoadData()
         {
-            string path = StorageService.GetStatsFilePath();
+            string path = StorageService.GetDataFilePath();
 
             TotalDashes = 0;
             TotalStandardChests = 0;
@@ -25,10 +26,11 @@ namespace WoLArchipelago.Services
             TotalBossChests = 0;
             TotalElementalChests = 0;
             TotalPartyChests = 0;
+            IsStartingInventoryApplied = false;
 
             if (!File.Exists(path))
             {
-                SaveStats();
+                SaveData();
                 return;
             }
 
@@ -46,7 +48,9 @@ namespace WoLArchipelago.Services
                     if (parts.Length != 2) continue;
 
                     string key = parts[0].Trim();
-                    if (int.TryParse(parts[1].Trim(), out int val))
+                    string valueStr = parts[1].Trim();
+
+                    if (int.TryParse(valueStr, out int val))
                     {
                         switch (key)
                         {
@@ -59,6 +63,13 @@ namespace WoLArchipelago.Services
                             case "TotalPartyChests": TotalPartyChests = val; break;
                         }
                     }
+                    else if (bool.TryParse(valueStr, out bool boolVal))
+                    {
+                        if (key == "IsStartingInventoryApplied")
+                        {
+                            IsStartingInventoryApplied = boolVal;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -67,9 +78,9 @@ namespace WoLArchipelago.Services
             }
         }
 
-        public static void SaveStats()
+        public static void SaveData()
         {
-            string path = StorageService.GetStatsFilePath();
+            string path = StorageService.GetDataFilePath();
             Dictionary<string, string> stats = new Dictionary<string, string>();
 
             if (File.Exists(path))
@@ -104,6 +115,7 @@ namespace WoLArchipelago.Services
             stats["TotalBossChests"] = TotalBossChests.ToString();
             stats["TotalElementalChests"] = TotalElementalChests.ToString();
             stats["TotalPartyChests"] = TotalPartyChests.ToString();
+            stats["IsStartingInventoryApplied"] = IsStartingInventoryApplied.ToString();
 
             try
             {
@@ -138,7 +150,7 @@ namespace WoLArchipelago.Services
 
             if (newCount != -1)
             {
-                SaveStats();
+                SaveData();
             }
 
             return newCount;

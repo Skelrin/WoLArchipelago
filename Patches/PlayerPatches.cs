@@ -9,7 +9,8 @@ namespace WoLArchipelago.Patches
         public static void Postfix(Player __instance)
         {
             if (__instance == null) return;
-
+            
+            Services.StartingInventoryHandler.ApplyArchipelagoStartingSkills();
             Services.ItemHandler.SyncPlayerMaxHP(__instance, true);
 
             if (DebugController.GodModeActive && __instance.health != null)

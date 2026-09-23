@@ -120,7 +120,7 @@ namespace WoLArchipelago.Services
             return false;
         }
 
-        public static string GetStatsFilePath()
+        public static string GetDataFilePath()
         {
             string apFolder = Path.Combine(Application.persistentDataPath, "AP_Saves");
             

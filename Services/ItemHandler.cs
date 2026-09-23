@@ -47,7 +47,7 @@ namespace WoLArchipelago.Services
             }
         }
 
-        private static Player GetActivePlayer(bool mustBeAlive = false)
+        public static Player GetActivePlayer(bool mustBeAlive = false)
         {
             var players = GameController.activePlayers;
             if (players == null) return null;

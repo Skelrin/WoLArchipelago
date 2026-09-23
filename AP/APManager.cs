@@ -25,10 +25,10 @@ namespace WoLArchipelago
         public static string CurrentAPSavePrefix => Services.StorageService.CurrentAPSavePrefix;
         public bool IsConnected { get; private set; }
         public string StatusMessage { get; private set; } = "Disconnected";
-        public int StartingArcanaMode { get; private set; }
-        public int ElementLicensesMode { get; private set; }
+        public static int StartingArcanaMode { get; private set; }
+        public static int ElementLicensesMode { get; private set; }
         public static int ChaosFragmentsRequired { get; private set; }
-        public string StartingElement { get; private set; }
+        public static string StartingElement { get; private set; }
         private bool pendingGoalCompletion = false;
 
         public APManager()
@@ -95,7 +95,7 @@ namespace WoLArchipelago
                                 storageService.SaveItemIndex(itemsReceivedIndex);
                             }
 
-                            Services.StatsManager.LoadStats();
+                            Services.DataManager.LoadData();
                         }
 
                         session.Locations.ScoutLocationsAsync(scoutedInfo =>
