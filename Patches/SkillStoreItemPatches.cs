@@ -39,10 +39,10 @@ namespace WoLArchipelago.Patches
             if (__instance.sigSR != null) __instance.sigSR.enabled = false;
 
             if (__instance.itemText != null)
-                __instance.itemText.gameObject.SetActive(false);
+                __instance.itemText.text = Plugin.AP.GetLocationInfo(locId).First;
 
             if (__instance.descText != null)
-                __instance.descText.text = Plugin.AP.GetLocationDescription(locId);
+                __instance.descText.text = Plugin.AP.GetLocationInfo(locId).Second;
         }
 
         [HarmonyPrefix]

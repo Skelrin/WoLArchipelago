@@ -252,7 +252,11 @@ namespace WoLArchipelago.Patches
 
             public static bool Prefix(Player __instance, string givenID, bool isSignature, bool isEmpowered)
             {
-                if (!SlotManager.PlayerHasLicenseToPickupSkill(__instance.GetSkill(givenID))) {return false; }
+                if (!SlotManager.PlayerHasLicenseToPickupSkill(__instance.GetSkill(givenID))) 
+                {
+                    DropSkill(__instance, __instance.GetSkill(givenID));
+                    return false; 
+                }
 
                 int num = -1;
 

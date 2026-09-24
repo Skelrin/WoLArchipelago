@@ -137,7 +137,7 @@ namespace WoLArchipelago
             });
         }
 
-        public string GetLocationDescription(long locationId)
+        public Tuple<string, string> GetLocationInfo(long locationId)
         {
             lock (lockObject)
             {
@@ -145,11 +145,12 @@ namespace WoLArchipelago
                 {
                     string playerName = itemInfo.Player?.Alias ?? itemInfo.Player?.Name ?? "Unknown Player";
                     string itemName = !string.IsNullOrEmpty(itemInfo.ItemDisplayName) ? itemInfo.ItemDisplayName : itemInfo.ItemName;
-
-                    return $"{playerName} : {itemName}";
+                    
+                    return new Tuple<string, string>(playerName, itemName);
                 }
             }
-            return "Emplacement Archipelago";
+
+            return new Tuple<string, string>("Unknown Player", "Emplacement Archipelago");
         }
 
         public void Disconnect()

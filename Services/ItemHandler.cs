@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Archipelago.MultiClient.Net.Models;
@@ -133,12 +134,33 @@ namespace WoLArchipelago.Services
 
         public static void TriggerCursedTrap()
         {
-            Player player = GetActivePlayer();
+            Plugin.Instance.StartCoroutine(CursedTrapCoroutine());
+        }
 
-            if (player == null || !GameController.inGameScene)
+        private static IEnumerator CursedTrapCoroutine()
+        {
+            if (GetActivePlayer(mustBeAlive: true) is not Player player || !GameController.inGameScene)
             {
-                return;
+                yield break;
             }
+
+            GameUI.BroadcastNoticeMessage("You've been caught in a trap!",2f);
+            SoundManager.PlayAudio("BuyCursedRelic");
+            yield return new WaitForSeconds(2f);
+
+            for (int i = 5; i > 0; i--)
+            {
+                GameUI.BroadcastNoticeMessage($"Trap triggering in {i}...");
+                yield return new WaitForSeconds(1f);
+
+                if (GetActivePlayer(mustBeAlive: true) is null || !GameController.inGameScene)
+                {
+                    yield break;
+                }
+            }
+
+            player = GetActivePlayer(mustBeAlive: true);
+            if (player == null) yield break;
 
             if (UnityEngine.Random.value < 0.5f && !player.inventory.IsFull)
             {
@@ -153,7 +175,7 @@ namespace WoLArchipelago.Services
                         int targetHealth = Mathf.Max(1, player.health.CurrentHealthValue - 100);
                         player.health.CurrentHealthValue = targetHealth;
                     }
-                    return;
+                    yield break;
                 }
             }
 
@@ -207,11 +229,10 @@ namespace WoLArchipelago.Services
             Item.IsUnlocked(selectedRelic, true);
             GameUI.BroadcastNoticeMessage($"Unlocked {TextManager.GetItemName($"{selectedRelic}")} relic");
 
-            Player player = GetActivePlayer(mustBeAlive: true);
-
-            if (player != null && GameController.inGameScene)
+            if (GetActivePlayer(mustBeAlive: true) is Player player && GameController.inGameScene)
             {
                 LootManager.DropItem(player.transform.position, 1, selectedRelic, false, 0);
+                SoundManager.PlayAudio("DropItem");
             }
         }
 
@@ -324,8 +345,13 @@ namespace WoLArchipelago.Services
             }
             else if (itemName.Contains("Doctor") || itemName.Contains("Heal"))
             {
-                Item.IsUnlocked(itemName, true);
                 GameUI.BroadcastNoticeMessage($"[AP] {TextManager.GetItemName(itemName)} Received");
+                Item.IsUnlocked(itemName, true);
+                if (GetActivePlayer() is Player player && GameController.inGameScene)
+                {
+                    LootManager.DropItem(player.transform.position, 1, itemName, false, 0);
+                    SoundManager.PlayAudio("DropItem");
+                }
             }
             else
             {

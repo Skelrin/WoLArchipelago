@@ -6,64 +6,27 @@ namespace WoLArchipelago.Patches
 {
     public static class SpellBookPatches
     {
-        public static void RefreshPlayerPageSlotVisibility(SpellBookUI spellBookUI)
+       [HarmonyPatch(typeof(SBPlayerPageUI), nameof(SBPlayerPageUI.SetHighlightedCard))]
+        public static class SBPlayerPageUISetHighlightedCardPatch
         {
-            if (spellBookUI == null) return;
-
-            var traverse = Traverse.Create(spellBookUI);
-            var sbRefTraverse = traverse.Field("sbRef");
-            var playerPage = sbRefTraverse.Field("playerPage").GetValue<SBPlayerPageUI>();
-            if (playerPage == null) return;
-
-            for (int slotIndex = 0; slotIndex < 4; slotIndex++)
+            public static void Postfix(SBPlayerPageUI __instance)
             {
-                bool unlocked = SlotManager.IsSlotUnlocked(slotIndex);
-
-                if (playerPage.cardBGTransArray != null && slotIndex < playerPage.cardBGTransArray.Length && playerPage.cardBGTransArray[slotIndex] != null)
+                for (int slotIndex = 2; slotIndex <= 3; slotIndex++)
                 {
-                    playerPage.cardBGTransArray[slotIndex].gameObject.SetActive(unlocked);
-                }
-
-                if (playerPage.spellIconArray != null && slotIndex < playerPage.spellIconArray.Length && playerPage.spellIconArray[slotIndex] != null)
-                {
-                    playerPage.spellIconArray[slotIndex].gameObject.SetActive(unlocked);
-                }
-
-                Transform slotTrans = playerPage.transform.Find("CardSlot" + slotIndex)
-                                   ?? playerPage.transform.Find("Card" + slotIndex)
-                                   ?? playerPage.transform.Find("Slot" + slotIndex);
-                if (slotTrans != null)
-                {
-                    slotTrans.gameObject.SetActive(unlocked);
-                }
-            }
-        }
-
-        [HarmonyPatch(typeof(SpellBookUI), nameof(SpellBookUI.Activate))]
-        public static class SpellBookUIActivatePatch
-        {
-            public static void Postfix(SpellBookUI __instance)
-            {
-                RefreshPlayerPageSlotVisibility(__instance);
-            }
-        }
-
-        [HarmonyPatch(typeof(SpellBookUI), "SetFocus")]
-        public static class SpellBookUISetFocusPatch
-        {
-            public static void Postfix(SpellBookUI __instance)
-            {
-                var traverse = Traverse.Create(__instance);
-                SpellBookUI.SBFocus currentFocus = traverse.Field("currentFocus").GetValue<SpellBookUI.SBFocus>();
-
-                if (currentFocus == SpellBookUI.SBFocus.Player)
-                {
-                    int currentIndex = traverse.Field("currentPlayerIndex").GetValue<int>();
-                    if (currentIndex >= 0 && currentIndex <= 3 && !SlotManager.IsSlotUnlocked(currentIndex))
+                    if (!SlotManager.IsSlotUnlocked(slotIndex))
                     {
-                        traverse.Field("currentPlayerIndex").SetValue(0);
+                        if (__instance.cardBGTransArray[slotIndex] != null) __instance.cardBGTransArray[slotIndex].gameObject.SetActive(false);
+                        if (__instance.spellIconArray[slotIndex] != null) __instance.spellIconArray[slotIndex].gameObject.SetActive(false);
+                        if (__instance.cardTextArray[slotIndex] != null) __instance.cardTextArray[slotIndex].gameObject.SetActive(false);
+                        if (__instance.newCardMarkerArray[slotIndex] != null) __instance.newCardMarkerArray[slotIndex].gameObject.SetActive(false);
+                        if (__instance.cardSelArray[slotIndex] != null) __instance.cardSelArray[slotIndex].SetActive(false);
                     }
-                    RefreshPlayerPageSlotVisibility(__instance);
+                    else
+                    {
+                        if (__instance.cardBGTransArray[slotIndex] != null) __instance.cardBGTransArray[slotIndex].gameObject.SetActive(true);
+                        if (__instance.spellIconArray[slotIndex] != null) __instance.spellIconArray[slotIndex].gameObject.SetActive(true);
+                        if (__instance.cardTextArray[slotIndex] != null) __instance.cardTextArray[slotIndex].gameObject.SetActive(true);
+                    }
                 }
             }
         }
@@ -74,7 +37,7 @@ namespace WoLArchipelago.Patches
             public static bool Prefix(SpellBookUI __instance)
             {
                 var traverse = Traverse.Create(__instance);
-                ChaosInputDevice inputDev = traverse.Field("inputDev").GetValue<ChaosInputDevice>();
+                var inputDev = traverse.Field("inputDev").GetValue<ChaosInputDevice>();
                 int currentPlayerIndex = traverse.Field("currentPlayerIndex").GetValue<int>();
 
                 InputDirection dir = Globals.GetInputDirection(inputDev.GetMoveVector());
@@ -86,39 +49,32 @@ namespace WoLArchipelago.Patches
                     return false;
                 }
 
-                ChaosQuickStopwatch navTimer = traverse.Field("navTimer").GetValue<ChaosQuickStopwatch>();
-                ChaosQuickStopwatch autoNavTimer = traverse.Field("autoNavTimer").GetValue<ChaosQuickStopwatch>();
+                var navTimer = traverse.Field("navTimer").GetValue<ChaosQuickStopwatch>();
+                var autoNavTimer = traverse.Field("autoNavTimer").GetValue<ChaosQuickStopwatch>();
 
-                if (navTimer.IsRunning || autoNavTimer.IsRunning)
-                {
-                    return false;
-                }
+                if (navTimer.IsRunning || autoNavTimer.IsRunning) return false;
 
-                int step = (dir == InputDirection.Right || dir == InputDirection.Down) ? 1 : -1;
                 int nextIndex = currentPlayerIndex;
 
                 if (dir == InputDirection.Right || dir == InputDirection.Left)
                 {
+                    int step = (dir == InputDirection.Right) ? 1 : -1;
                     nextIndex = GetNextUnlockedPlayerIndex(currentPlayerIndex, step);
                 }
-                else if (dir == InputDirection.Up || dir == InputDirection.Down)
+                else if (dir == InputDirection.Down && currentPlayerIndex <= 3)
                 {
-                    if (dir == InputDirection.Down && currentPlayerIndex <= 3)
-                    {
-                        nextIndex = 4;
-                    }
-                    else if (dir == InputDirection.Up && currentPlayerIndex > 3)
-                    {
-                        nextIndex = GetLastUnlockedCardIndex();
-                    }
+                    nextIndex = 4;
+                }
+                else if (dir == InputDirection.Up && currentPlayerIndex > 3)
+                {
+                    nextIndex = GetLastUnlockedCardIndex();
                 }
 
                 if (nextIndex != currentPlayerIndex)
                 {
                     SoundManager.PlayAudio("MenuMove");
-
-                    bool initNavDelayReset = traverse.Field("initNavDelayReset").GetValue<bool>();
-                    if (initNavDelayReset)
+                    
+                    if (traverse.Field("initNavDelayReset").GetValue<bool>())
                     {
                         traverse.Field("initNavDelayReset").SetValue(false);
                         navTimer.IsRunning = true;
@@ -129,7 +85,6 @@ namespace WoLArchipelago.Patches
                     }
 
                     traverse.Field("currentPlayerIndex").SetValue(nextIndex);
-
                     var sbRefTraverse = traverse.Field("sbRef");
                     var playerPage = sbRefTraverse.Field("playerPage").GetValue<SBPlayerPageUI>();
 
@@ -144,23 +99,11 @@ namespace WoLArchipelago.Patches
                         playerPage.allSkillsFocusedObj.SetActive(false);
                         playerPage.allSkillsUnfocusedObj.SetActive(true);
 
-                        SpellBookUI.SkillEquipType selectedType = SpellBookUI.SkillEquipType.Basic;
-                        switch (nextIndex)
-                        {
-                            case 0: selectedType = SpellBookUI.SkillEquipType.Basic; break;
-                            case 1: selectedType = SpellBookUI.SkillEquipType.Dash; break;
-                            case 2: selectedType = SpellBookUI.SkillEquipType.Optional; break;
-                            case 3: selectedType = SpellBookUI.SkillEquipType.Signature; break;
-                        }
+                        SpellBookUI.SkillEquipType selectedType = (SpellBookUI.SkillEquipType)nextIndex;
                         traverse.Field("playerInfoSelectedType").SetValue(selectedType);
 
                         var plTypeSkillDict = sbRefTraverse.Field("plTypeSkillDict").GetValue<Dictionary<SpellBookUI.SkillEquipType, Player.SkillState>>();
-                        Player.SkillState skill = null;
-                        if (plTypeSkillDict != null && plTypeSkillDict.TryGetValue(selectedType, out var s))
-                        {
-                            skill = s;
-                        }
-                        traverse.Field("currentSkill").SetValue(skill);
+                        traverse.Field("currentSkill").SetValue(plTypeSkillDict != null && plTypeSkillDict.ContainsKey(selectedType) ? plTypeSkillDict[selectedType] : null);
                     }
 
                     playerPage.SetHighlightedCard(nextIndex);
@@ -169,76 +112,22 @@ namespace WoLArchipelago.Patches
                 return false;
             }
 
-            private static bool IsPlayerIndexUnlocked(int index)
-            {
-                if (index >= 0 && index <= 3)
-                {
-                    return SlotManager.IsSlotUnlocked(index);
-                }
-                return true;
-            }
-
             private static int GetNextUnlockedPlayerIndex(int currentIndex, int step)
             {
                 int next = currentIndex + step;
-                while (next >= 0 && next <= 4 && !IsPlayerIndexUnlocked(next))
+                while (next == 2 || next == 3)
                 {
+                    if (SlotManager.IsSlotUnlocked(next)) break;
                     next += step;
                 }
-
-                if (next < 0 || next > 4)
-                    return currentIndex;
-
-                return next;
+                return (next < 0 || next > 4) ? currentIndex : next;
             }
 
             private static int GetLastUnlockedCardIndex()
             {
-                for (int i = 3; i >= 0; i--)
-                {
-                    if (IsPlayerIndexUnlocked(i)) return i;
-                }
-                return 0;
-            }
-        }
-
-        [HarmonyPatch(typeof(SpellBookUI), nameof(SpellBookUI.ConfirmSelected))]
-        public static class SpellBookUIConfirmSelectedPatch
-        {
-            public static bool Prefix(SpellBookUI __instance)
-            {
-                var traverse = Traverse.Create(__instance);
-                SpellBookUI.SBFocus currentFocus = traverse.Field("currentFocus").GetValue<SpellBookUI.SBFocus>();
-                Player.SkillState currentSkill = traverse.Field("currentSkill").GetValue<Player.SkillState>();
-
-                if (currentFocus == SpellBookUI.SBFocus.Overdrive)
-                {
-                    if (!SlotManager.IsSlotUnlocked(3))
-                    {
-                        SoundManager.PlayAudio("MenuError");
-                        return false;
-                    }
-                }
-                else if (currentFocus == SpellBookUI.SBFocus.Spell && currentSkill != null)
-                {
-                    int targetSlot = (!currentSkill.isBasic) ? (currentSkill.isDash ? 1 : 2) : 0;
-                    if (!SlotManager.IsSlotUnlocked(targetSlot))
-                    {
-                        SoundManager.PlayAudio("MenuError");
-                        return false;
-                    }
-                }
-                else if (currentFocus == SpellBookUI.SBFocus.Player)
-                {
-                    int currentPlayerIndex = traverse.Field("currentPlayerIndex").GetValue<int>();
-                    if (currentPlayerIndex >= 0 && currentPlayerIndex <= 3 && !SlotManager.IsSlotUnlocked(currentPlayerIndex))
-                    {
-                        SoundManager.PlayAudio("MenuError");
-                        return false;
-                    }
-                }
-
-                return true;
+                if (SlotManager.IsSlotUnlocked(3)) return 3;
+                if (SlotManager.IsSlotUnlocked(2)) return 2;
+                return 1;
             }
         }
 
@@ -249,13 +138,14 @@ namespace WoLArchipelago.Patches
             {
                 var traverse = Traverse.Create(__instance);
                 Player.SkillState currentSkill = traverse.Field("currentSkill").GetValue<Player.SkillState>();
+                
                 if (currentSkill == null) return true;
 
                 int targetSlot = 0;
                 switch (givenFocus)
                 {
                     case SpellBookUI.SBFocus.Player:
-                        SpellBookUI.SkillEquipType playerInfoSelectedType = traverse.Field("playerInfoSelectedType").GetValue<SpellBookUI.SkillEquipType>();
+                        var playerInfoSelectedType = traverse.Field("playerInfoSelectedType").GetValue<SpellBookUI.SkillEquipType>();
                         var skillEquipSlots = traverse.Field("sbRef").Field("skillEquipSlots").GetValue<Dictionary<SpellBookUI.SkillEquipType, int>>();
                         if (skillEquipSlots != null && skillEquipSlots.TryGetValue(playerInfoSelectedType, out int slot))
                         {
@@ -272,11 +162,11 @@ namespace WoLArchipelago.Patches
                         break;
                 }
 
-                if (!SlotManager.IsSlotUnlocked(targetSlot))
+                if (targetSlot >= 2 && !SlotManager.IsSlotUnlocked(targetSlot))
                 {
                     SoundManager.PlayAudio("MenuError");
-                    __result = false;
-                    return false;
+                    __result = false; 
+                    return false;     
                 }
 
                 return true;

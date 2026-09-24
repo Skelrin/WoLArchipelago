@@ -44,11 +44,11 @@ namespace WoLArchipelago.Patches
                 __instance.itemSpriteRenderer.transform.localPosition = new Vector3(pos.x, pos.y + 1f, pos.z);
             }
 
-            if (__instance.descText != null)
-                __instance.descText.text = Plugin.AP.GetLocationDescription(locId);
-
             if (__instance.itemText != null)
-                __instance.itemText.text = string.Empty;
+                __instance.itemText.text = Plugin.AP.GetLocationInfo(locId).First;
+
+            if (__instance.descText != null)
+                __instance.descText.text = Plugin.AP.GetLocationInfo(locId).Second;
         }
 
         [HarmonyPrefix]

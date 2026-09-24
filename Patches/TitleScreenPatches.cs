@@ -12,13 +12,13 @@ namespace WoLArchipelago.Patches
         {
             try
             {
+                Transform singleBtn = __instance.transform.Find("TitleMenu/SinglePlayer");
                 Transform coopBtn = __instance.transform.Find("TitleMenu/TwoPlayers");
                 Transform versusBtn = __instance.transform.Find("TitleMenu/Versus");
+                Transform optionsBtn = __instance.transform.Find("TitleMenu/Options");
+                Transform creditsBtn = __instance.transform.Find("TitleMenu/Credits");
+                Transform exitBtn = __instance.transform.Find("TitleMenu/Exit");
 
-                if (coopBtn != null) coopBtn.gameObject.SetActive(false);
-                if (versusBtn != null) versusBtn.gameObject.SetActive(false);
-
-                Transform singleBtn = __instance.transform.Find("TitleMenu/SinglePlayer");
                 if (singleBtn != null)
                 {
                     Text textComp = singleBtn.GetComponent<Text>();
@@ -27,6 +27,18 @@ namespace WoLArchipelago.Patches
                         textComp.text = "CONNECT TO ARCHIPELAGO";
                     }
                 }
+
+                if (singleBtn != null && coopBtn != null && optionsBtn != null && creditsBtn != null && exitBtn != null)
+                {
+                    float spacing = coopBtn.localPosition.y - singleBtn.localPosition.y;
+
+                    optionsBtn.localPosition = new Vector3(optionsBtn.localPosition.x, singleBtn.localPosition.y + spacing, optionsBtn.localPosition.z);
+                    creditsBtn.localPosition = new Vector3(creditsBtn.localPosition.x, singleBtn.localPosition.y + (spacing * 2), creditsBtn.localPosition.z);
+                    exitBtn.localPosition = new Vector3(exitBtn.localPosition.x, singleBtn.localPosition.y + (spacing * 3), exitBtn.localPosition.z);
+                }
+
+                coopBtn?.gameObject.SetActive(false);
+                versusBtn?.gameObject.SetActive(false);
             }
             catch (System.Exception ex)
             {
@@ -39,22 +51,15 @@ namespace WoLArchipelago.Patches
     public class TitleScreenNavigationPatch
     {
         [HarmonyPrefix]
-        public static void Prefix(TitleScreen __instance, ref int newIndex)
+        public static void Prefix(ref int newIndex)
         {
-            if (newIndex == 1 || newIndex == 2)
+            if (newIndex == 1)
             {
-                if (__instance.currentMenuIndex == 0)
-                {
-                    newIndex = 3;
-                }
-                else if (__instance.currentMenuIndex == 3)
-                {
-                    newIndex = 0;
-                }
-                else
-                {
-                    newIndex = 0;
-                }
+                newIndex = 3;
+            }
+            else if (newIndex == 2)
+            {
+                newIndex = 0;
             }
         }
     }
