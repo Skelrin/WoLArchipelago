@@ -1,4 +1,5 @@
 using HarmonyLib;
+using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
@@ -10,24 +11,27 @@ namespace WoLArchipelago.Patches
         [HarmonyPrefix]
         public static void Prefix(TreasureChest __instance)
         {
+            if (__instance == null) return;
+
             if (__instance.chestType == TreasureChestType.Boss)
             {
                 IsOpeningBossChest = true;
             }
 
-            if (__instance != null && !__instance.opened && !__instance.destroyed && __instance.dropLoot)
+            if (!__instance.opened && !__instance.destroyed && __instance.dropLoot)
             {
                 string chestTypeName = __instance.chestType.ToString();
-                
-                int currentCount = Services.DataManager.IncrementChestCount(chestTypeName);
-                if (currentCount <= 0) return;
 
-                string locationName = chestTypeName + " Chest Slot " + currentCount;
-                long locId = APItemLocationDatabase.GetLocationId(locationName);
-
-                if (locId != -1)
+                if (!chestTypeName.Contains("Boss") && !chestTypeName.Contains("MiniBoss") && !chestTypeName.Contains("Party"))
                 {
-                    Plugin.AP.SendLocationCheck(locId);
+                    chestTypeName = Level.element.ToString();
+                }
+
+                int currentCount = DataManager.IncrementChestCount(chestTypeName);
+                if (currentCount > 0)
+                {
+                    CheckHandler.CheckLocation($"{chestTypeName} Chest Slot {currentCount}");
+                    CheckHandler.CheckLocation($"Open {DataManager.TotalChestsOpened} Total Chests");
                 }
             }
         }
@@ -43,14 +47,6 @@ namespace WoLArchipelago.Patches
     public static class LootManagerDropSkillPatch
     {
         [HarmonyPrefix]
-        public static bool Prefix()
-        {
-            if (TreasureChestBreakPatch.IsOpeningBossChest)
-            {
-                return false;
-            }
-
-            return true;
-        }
+        public static bool Prefix() => !TreasureChestBreakPatch.IsOpeningBossChest;
     }
 }

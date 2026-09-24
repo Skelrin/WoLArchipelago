@@ -4,30 +4,24 @@ using System.IO;
 
 namespace WoLArchipelago.Services
 {
-    public class DataManager
+    public static class DataManager
     {
-        public static int TotalDashes { get; set; } = 0;
-        public static int TotalStandardChests { get; set; } = 0;
-        public static int TotalMiniChests { get; set; } = 0;
-        public static int TotalMiniBossChests { get; set; } = 0;
-        public static int TotalBossChests { get; set; } = 0;
-        public static int TotalElementalChests { get; set; } = 0;
-        public static int TotalPartyChests { get; set; } = 0;
-        public static bool IsStartingInventoryApplied { get; set; } = false;
+        public static int TotalDashes { get; set; }
+        public static int TotalChestsOpened { get; set; }
+        public static bool IsStartingInventoryApplied { get; set; }
+
+        public static Dictionary<string, int> ChestCounts { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        public static Dictionary<string, int> EnemyCounts { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         public static void LoadData()
         {
-            string path = StorageService.GetDataFilePath();
-
             TotalDashes = 0;
-            TotalStandardChests = 0;
-            TotalMiniChests = 0;
-            TotalMiniBossChests = 0;
-            TotalBossChests = 0;
-            TotalElementalChests = 0;
-            TotalPartyChests = 0;
+            TotalChestsOpened = 0;
             IsStartingInventoryApplied = false;
+            ChestCounts.Clear();
+            EnemyCounts.Clear();
 
+            string path = StorageService.GetDataFilePath();
             if (!File.Exists(path))
             {
                 SaveData();
@@ -36,123 +30,77 @@ namespace WoLArchipelago.Services
 
             try
             {
-                string[] lines = File.ReadAllLines(path);
-                foreach (string rawLine in lines)
+                foreach (string rawLine in File.ReadAllLines(path))
                 {
-                    if (string.IsNullOrEmpty(rawLine)) continue;
-
                     string line = rawLine.Trim();
-                    if (line.StartsWith("#") || line.StartsWith("//")) continue;
+                    if (string.IsNullOrEmpty(line) || line.StartsWith("#") || line.StartsWith("//")) continue;
 
-                    string[] parts = line.Split(['='], 2);
+                    string[] parts = line.Split(new[] { '=' }, 2);
                     if (parts.Length != 2) continue;
 
                     string key = parts[0].Trim();
-                    string valueStr = parts[1].Trim();
+                    string valStr = parts[1].Trim();
 
-                    if (int.TryParse(valueStr, out int val))
+                    if (int.TryParse(valStr, out int val))
                     {
-                        switch (key)
-                        {
-                            case "TotalDashes": TotalDashes = val; break;
-                            case "TotalStandardChests": TotalStandardChests = val; break;
-                            case "TotalMiniChests": TotalMiniChests = val; break;
-                            case "TotalMiniBossChests": TotalMiniBossChests = val; break;
-                            case "TotalBossChests": TotalBossChests = val; break;
-                            case "TotalElementalChests": TotalElementalChests = val; break;
-                            case "TotalPartyChests": TotalPartyChests = val; break;
-                        }
+                        if (key == nameof(TotalDashes)) TotalDashes = val;
+                        else if (key == nameof(TotalChestsOpened)) TotalChestsOpened = val;
+                        else if (key.StartsWith("Chest_")) ChestCounts[key.Substring(6)] = val;
+                        else if (key.StartsWith("Enemy_")) EnemyCounts[key.Substring(6)] = val;
                     }
-                    else if (bool.TryParse(valueStr, out bool boolVal))
+                    else if (key == nameof(IsStartingInventoryApplied) && bool.TryParse(valStr, out bool boolVal))
                     {
-                        if (key == "IsStartingInventoryApplied")
-                        {
-                            IsStartingInventoryApplied = boolVal;
-                        }
+                        IsStartingInventoryApplied = boolVal;
                     }
                 }
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[StatsManager] Error loading : {ex.Message}");
+                Plugin.Log.LogError($"[DataManager] Error loading: {ex.Message}");
             }
         }
 
         public static void SaveData()
         {
-            string path = StorageService.GetDataFilePath();
-            Dictionary<string, string> stats = new Dictionary<string, string>();
-
-            if (File.Exists(path))
-            {
-                try
-                {
-                    string[] lines = File.ReadAllLines(path);
-                    foreach (string rawLine in lines)
-                    {
-                        if (string.IsNullOrEmpty(rawLine)) continue;
-
-                        string line = rawLine.Trim();
-                        if (line.StartsWith("#") || line.StartsWith("//")) continue;
-
-                        string[] parts = line.Split(['='], 2);
-                        if (parts.Length == 2)
-                        {
-                            stats[parts[0].Trim()] = parts[1].Trim();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Plugin.Log.LogError($"[StatsManager] Error reading before backup : {ex.Message}");
-                }
-            }
-
-            stats["TotalDashes"] = TotalDashes.ToString();
-            stats["TotalStandardChests"] = TotalStandardChests.ToString();
-            stats["TotalMiniChests"] = TotalMiniChests.ToString();
-            stats["TotalMiniBossChests"] = TotalMiniBossChests.ToString();
-            stats["TotalBossChests"] = TotalBossChests.ToString();
-            stats["TotalElementalChests"] = TotalElementalChests.ToString();
-            stats["TotalPartyChests"] = TotalPartyChests.ToString();
-            stats["IsStartingInventoryApplied"] = IsStartingInventoryApplied.ToString();
-
             try
             {
-                string[] output = new string[stats.Count];
-                int index = 0;
-                foreach (KeyValuePair<string, string> kvp in stats)
+                List<string> lines = new List<string>
                 {
-                    output[index++] = kvp.Key + "=" + kvp.Value;
-                }
+                    $"{nameof(TotalDashes)}={TotalDashes}",
+                    $"{nameof(TotalChestsOpened)}={TotalChestsOpened}",
+                    $"{nameof(IsStartingInventoryApplied)}={IsStartingInventoryApplied}"
+                };
 
-                File.WriteAllLines(path, output);
+                foreach (KeyValuePair<string, int> kvp in ChestCounts) lines.Add($"Chest_{kvp.Key}={kvp.Value}");
+                foreach (KeyValuePair<string, int> kvp in EnemyCounts) lines.Add($"Enemy_{kvp.Key}={kvp.Value}");
+
+                File.WriteAllLines(StorageService.GetDataFilePath(), lines.ToArray());
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[StatsManager] Error writing : {ex.Message}");
+                Plugin.Log.LogError($"[DataManager] Error saving: {ex.Message}");
             }
         }
 
-        public static int IncrementChestCount(string chestTypeName)
+        public static int IncrementEnemyCount(string enemyType)
         {
-            int newCount = -1;
+            EnemyCounts.TryGetValue(enemyType, out int current);
+            int newCount = current + 1;
+            EnemyCounts[enemyType] = newCount;
+            
+            SaveData();
+            return newCount;
+        }
 
-            switch (chestTypeName)
-            {
-                case "Standard": TotalStandardChests++; newCount = TotalStandardChests; break;
-                case "Mini": TotalMiniChests++; newCount = TotalMiniChests; break;
-                case "MiniBoss": TotalMiniBossChests++; newCount = TotalMiniBossChests; break;
-                case "Boss": TotalBossChests++; newCount = TotalBossChests; break;
-                case "Elemental": TotalElementalChests++; newCount = TotalElementalChests; break;
-                case "Party": TotalPartyChests++; newCount = TotalPartyChests; break;
-            }
+        public static int IncrementChestCount(string chestType)
+        {
+            TotalChestsOpened++;
 
-            if (newCount != -1)
-            {
-                SaveData();
-            }
+            ChestCounts.TryGetValue(chestType, out int current);
+            int newCount = current + 1;
+            ChestCounts[chestType] = newCount;
 
+            SaveData();
             return newCount;
         }
     }

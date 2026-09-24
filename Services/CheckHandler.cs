@@ -2,21 +2,32 @@ namespace WoLArchipelago.Services
 {
     public class CheckHandler
     {
-        public static void SendNpcCheck(string locName, int maxSlots)
+        public static void SendNpcCheck(string locNameFormat, int maxSlots)
         {
+            var checkedLocations = Plugin.AP.GetCheckedLocation();
+
             for (int i = 1; i <= maxSlots; i++)
             {
-                string candidateName = string.Format(locName, i);
-
+                string candidateName = string.Format(locNameFormat, i);
                 long locId = APItemLocationDatabase.GetLocationId(candidateName);
 
-                if (locId != -1 && !Plugin.AP.GetCheckedLocation().Contains(locId))
+                if (!checkedLocations.Contains(locId) && CheckLocation(candidateName))
                 {
-                    Plugin.AP.SendLocationCheck(locId);
                     SoundManager.PlayAudio("MenuBuy");
-                    break;
+                    return;
                 }
             }
+        }
+
+        public static bool CheckLocation(string locationName)
+        {
+            long locId = APItemLocationDatabase.GetLocationId(locationName);
+            if (locId != -1)
+            {
+                Plugin.AP.SendLocationCheck(locId);
+                return true;
+            }
+            return false;
         }
     }
 }

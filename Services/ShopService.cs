@@ -16,7 +16,7 @@ namespace WoLArchipelago.Services
 
         public static int GetMaxShopSlots()
         {
-            return Mathf.Min((ItemHandler.GetTotalShopUpgrade() + 1) * 16, 64);
+            return Mathf.Min(ItemHandler.GetTotalShopUpgrade() * 16, 64);
         }
 
         public static bool TryGetNextLocation(string slotNameFormat, int maxSlots, out long locId, out string locName)

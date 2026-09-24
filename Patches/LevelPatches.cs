@@ -1,5 +1,6 @@
 using HarmonyLib;
 using UnityEngine;
+using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
@@ -18,7 +19,7 @@ namespace WoLArchipelago.Patches
 
         [HarmonyPrefix]
         public static bool Prefix(NextLevelLoader __instance, Collider2D col)
-        {
+        {   
             if (DebugController.tpLastBoss)
             {
                 GameController.tierCount = 2;
@@ -54,10 +55,10 @@ namespace WoLArchipelago.Patches
             if (DebugController.BypassBoss) return false;
 
             if (stage == 2)
-                return !Services.ItemHandler.CanAccessBossStage(tier, stage);
+                return !ItemHandler.CanAccessBossStage(tier, stage);
 
             if (tier == 2 && stage == 3)
-                return !Services.ItemHandler.CanAccessFinalBossStage();
+                return !ItemHandler.CanAccessFinalBossStage();
 
             return false;
         }
@@ -69,13 +70,13 @@ namespace WoLArchipelago.Patches
             if (stage == 2)
             {
                 int keysNeeded = tier + 1;
-                int haveKeys = Services.ItemHandler.GetTotalBossKeys();
+                int haveKeys = ItemHandler.GetTotalBossKeys();
                 GameUI.BroadcastNoticeMessage($"Boss locked! Requires {keysNeeded} Key(s) (Have: {haveKeys}/3)");
             }
             else
             {
                 int req = APManager.ChaosFragmentsRequired;
-                int have = Services.ItemHandler.GetTotalChaosFragment();
+                int have = ItemHandler.GetTotalChaosFragment();
                 GameUI.BroadcastNoticeMessage($"Final Boss locked! Requires {req} Chaos Fragment(s) (Have: {have}/{req})");
             }
         }
@@ -86,11 +87,7 @@ namespace WoLArchipelago.Patches
                 ? $"Stage {tier + 1}-{stage} Cleared"
                 : $"{GetCouncilLevelName(tier)} Council Member Defeated";
 
-            long locId = APItemLocationDatabase.GetLocationId(candidateName);
-            if (locId != -1 && !Plugin.AP.GetCheckedLocation().Contains(locId))
-            {
-                Plugin.AP.SendLocationCheck(locId);
-            }
+            CheckHandler.CheckLocation(candidateName);
         }
 
         private static string GetCouncilLevelName(int tier)
@@ -103,9 +100,15 @@ namespace WoLArchipelago.Patches
     public class SaveOnLevelChangePatch
     {
         [HarmonyPrefix]
-        public static void Prefix()
+        public static void Prefix(string givenLevelName)
         {
-            Services.DataManager.SaveData();
+            if (givenLevelName == "Hub" || givenLevelName == "PlayerRoom" || 
+                givenLevelName == "TitleScreen" || givenLevelName == "InitialLoad" || 
+                givenLevelName == "Tutorial" || givenLevelName == "Credits")
+            {
+                BiomesHandler.ResetRun();
+            }
+            DataManager.SaveData();
         }
     }
 }

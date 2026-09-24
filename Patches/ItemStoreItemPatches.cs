@@ -1,4 +1,5 @@
 using HarmonyLib;
+using UnityEngine;
 
 namespace WoLArchipelago.Patches
 {
@@ -60,7 +61,19 @@ namespace WoLArchipelago.Patches
                 __instance.priceMarker,
                 __instance.Cost,
                 __instance.usePlatinumCost,
-                onSuccess: () => __instance.parentNpc?.PlayDefaultEmote(),
+                onSuccess: () =>
+                {
+                    __instance.parentNpc?.PlayDefaultEmote();
+
+                    if (__instance.cursedOnly)
+                    {
+                        Player targetPlayer = player ?? Services.ItemHandler.GetActivePlayer();
+                        if (targetPlayer?.health != null)
+                        {
+                            targetPlayer.health.CurrentHealthValue = Mathf.Max(1, targetPlayer.health.CurrentHealthValue - 50);
+                        }
+                    }
+                },
                 onFailure: __instance.PlayDenyBuyEffects
             );
         }

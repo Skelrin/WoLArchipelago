@@ -1,29 +1,40 @@
+using System.Collections.Generic;
 using HarmonyLib;
+using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(GameData.GameStats), "EnemyDefeated")]
     public class GameStatsEnemyDefeatedPatch
     {
+        private static readonly Dictionary<string, string> ElementMap = new()
+        {
+            { "Frost", "Water" },
+            { "Earth", "Earth" },
+            { "Flame", "Fire" },
+            { "Wind", "Air" },
+            { "Thunder", "Lightning" }
+        };
+
         [HarmonyPostfix]
         public static void Postfix(GameData.GameStats __instance, string name)
         {
-            int count = __instance.GetEnemyDefeatedCount(name);
-
-            string locationName = (count == 1) 
-                ? $"{name} Defeated" 
-                : $"{name} Defeated {count} times";
-
-            long locId = APItemLocationDatabase.GetLocationId(locationName);
-
-            if (locId != -1)
+            foreach (KeyValuePair<string, string> entry in ElementMap)
             {
-                Plugin.AP.SendLocationCheck(locId);
-
-                if (locationName.Equals("FinalBoss Defeated"))
+                if (name.Contains(entry.Key))
                 {
-                    Plugin.AP.CompleteGoal();
+                    int total = DataManager.IncrementEnemyCount(entry.Value);
+                    CheckHandler.CheckLocation($"{entry.Value} Enemies Defeated {total} times");
+                    break;
                 }
+            }
+
+            int count = __instance.GetEnemyDefeatedCount(name);
+            string locName = (count == 1) ? $"{name} Defeated" : $"{name} Defeated {count} times";
+
+            if (CheckHandler.CheckLocation(locName) && locName == "FinalBoss Defeated")
+            {
+                Plugin.AP.CompleteGoal();
             }
         }
     }
@@ -35,31 +46,18 @@ namespace WoLArchipelago.Patches
         public static void Postfix(GameData.GameStats __instance, GameData.Stat givenStat)
         {
             int total = __instance.GetIntStatValue(givenStat);
-            string locationName = null;
 
-            switch (givenStat)
+            string locationName = givenStat switch
             {
-                case GameData.Stat.Painting:
-                    locationName = $"Break {total} Paintings";
-                    break;
-                case GameData.Stat.Death:
-                    locationName = $"Die {total} times";
-                    break;
-                case GameData.Stat.Fall:
-                    locationName = $"Fall {total} times";
-                    break;
-                default:
-                    break;
-            }
+                GameData.Stat.Painting => $"Break {total} Paintings",
+                GameData.Stat.Death => $"Die {total} times",
+                GameData.Stat.Fall => $"Fall {total} times",
+                _ => null
+            };
 
             if (locationName != null)
             {
-                long locId = APItemLocationDatabase.GetLocationId(locationName);
-                
-                if (locId != -1)
-                {
-                    Plugin.AP.SendLocationCheck(locId);
-                }
+                CheckHandler.CheckLocation(locationName);
             }
         }
     }
@@ -70,22 +68,13 @@ namespace WoLArchipelago.Patches
         [HarmonyPostfix]
         public static void Postfix(Player.SkillState __instance)
         {
-            if (__instance == null || !__instance.isDash) return;
+            if (__instance == null || !__instance.isDash || DataManager.TotalDashes >= 500) return;
 
-            if (Services.DataManager.TotalDashes >= 500) return;
+            DataManager.TotalDashes++;
 
-            Services.DataManager.TotalDashes++;
-
-            int dashes = Services.DataManager.TotalDashes;
-            if (dashes == 100 || dashes == 500)
+            if (DataManager.TotalDashes is 100 or 500)
             {
-                string locationName = "Dash " + dashes + " times";
-                long locId = APItemLocationDatabase.GetLocationId(locationName);
-
-                if (locId != -1)
-                {
-                    Plugin.AP.SendLocationCheck(locId);
-                }
+                CheckHandler.CheckLocation($"Dash {DataManager.TotalDashes} times");
             }
         }
     }

@@ -14,7 +14,10 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(nameof(OutfitStoreItem.Start))]
         public static void StartPostfix(OutfitStoreItem __instance)
         {
-            if (!Services.ShopService.TryGetNextLocation(SlotFormat, 16, out long locId, out string locName))
+
+            int maxSlots = Services.ItemHandler.GetTotalShopUpgrade() == 0 ? 0 : 16;
+
+            if (!Services.ShopService.TryGetNextLocation(SlotFormat, maxSlots, out long locId, out string locName))
             {
                 Services.ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
                 return;

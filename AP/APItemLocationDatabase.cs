@@ -69,6 +69,13 @@ public static class APItemLocationDatabase
         AddItem("Boss Key", 871120002);
         AddItem("Shop Upgrade", 871120003);
 
+        // Biome Keys
+        AddItem("Fire Biome Key", 871120010);
+        AddItem("Water Biome Key", 871120011);
+        AddItem("Earth Biome Key", 871120012);
+        AddItem("Air Biome Key", 871120013);
+        AddItem("Lightning Biome Key", 871120014);
+
         // Outfits
         AddItem("Outfit: Hope", 871121001);
         AddItem("Outfit: Patience", 871121002);
@@ -133,7 +140,7 @@ public static class APItemLocationDatabase
 
     private static void InitializeLocations()
     {
-        // 1. BOSSES
+        // BOSSES
         string[] bosses =
         [
             "AirBoss",
@@ -150,7 +157,7 @@ public static class APItemLocationDatabase
 
         AddLocation("FinalBoss Defeated");
 
-        // 2. MINIBOSSES
+        // MINIBOSSES
         string[] minibosses =
         {
             "SuperArcher", 
@@ -169,7 +176,7 @@ public static class APItemLocationDatabase
             AddLocation(m + " Defeated 10 times");
         }
 
-        // 3. ENEMIES
+        // BASE ENEMIES
         string[] enemies =
         {
             "Blob", 
@@ -185,22 +192,34 @@ public static class APItemLocationDatabase
         };
         foreach (string e in enemies)
         {
+            AddLocation(e + " Defeated 25 times");
             AddLocation(e + " Defeated 50 times");
-            AddLocation(e + " Defeated 100 times");
+            AddLocation(e + " Defeated 75 times");
         }
 
+        AddLocation("MimicEnemy Defeated 5 times");
+        AddLocation("MimicEnemy Defeated 10 times");
         AddLocation("MimicEnemy Defeated 20 times");
 
         AddLocation("Pinata Defeated");
         AddLocation("Pinata Defeated 5 times");
         AddLocation("Pinata Defeated 10 times");
 
-        // 4. SPAWN SHOPS
+        // ELEMENTAL ENEMIES
+        string[] elements = ["Fire", "Water", "Earth", "Air", "Lightning"];
+        foreach (string e in elements)
+        {
+            AddLocation(e + " Enemies Defeated 25 times");
+            AddLocation(e + " Enemies Defeated 50 times");
+            AddLocation(e + " Enemies Defeated 75 times");
+        }
+
+        // SPAWN SHOPS
         AddMultipleLocations("Outfit Shop Slot", 16);
         AddMultipleLocations("Relic Shop Slot", 64);
         AddMultipleLocations("Arcana Shop Slot", 64);
 
-        // 5. NPCS
+        // DUNGEON NPCS & EVENTS
         AddMultipleLocations("Doctor Song Slot", 10);
         AddMultipleLocations("Savile the Tailor Slot", 10);
         AddMultipleLocations("Nox the Unfortunate Slot", 40);
@@ -209,15 +228,22 @@ public static class APItemLocationDatabase
         AddMultipleLocations("Doki the Banker Slot", 10);
         AddMultipleLocations("Strange Time Keeper Slot", 5);
 
-        // 6. CHESTS
-        AddMultipleLocations("Standard Chest Slot", 40);
-        AddMultipleLocations("Mini Chest Slot", 40);
+        // CHEST MILESTONES
+        foreach (string e in elements)
+        {
+            AddMultipleLocations(e + " Chest Slot", 20);
+        }
         AddMultipleLocations("MiniBoss Chest Slot", 40);
-        AddMultipleLocations("Boss Chest Slot", 40);
-        AddMultipleLocations("Party Chest Slot", 5);
-        AddMultipleLocations("Elemental Chest Slot", 5);
+        AddMultipleLocations("Boss Chest Slot", 20);
+        AddMultipleLocations("Party Chest Slot", 2);
 
-        // 7. PROGRESSION & MILESTONES
+        int[] milestones = [10, 25, 50, 75, 100];
+        foreach (int count in milestones)
+        {
+            AddLocation($"Open {count} Total Chests");
+        }
+
+        // PROGRESSION & MILESTONES
         AddLocation("Stage 1-1 Cleared");
         AddLocation("Stage 1-2 Cleared");
         AddLocation("Stage 2-1 Cleared");

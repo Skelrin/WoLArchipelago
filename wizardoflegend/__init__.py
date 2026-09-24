@@ -17,20 +17,20 @@ class WoLWorld(World):
         if self.options.chaos_fragments_required.value > self.options.chaos_fragments_total.value:
             self.options.chaos_fragments_required.value = self.options.chaos_fragments_total.value
 
-        self.starting_element = None
+        elements = ["Fire", "Water", "Earth", "Air", "Lightning"]
 
-        is_starting_arcana_random = self.options.starting_arcana_mode.value == self.options.starting_arcana_mode.option_randomize
-        is_licenses_enabled = self.options.element_licenses_mode.value == self.options.element_licenses_mode.option_required
+        self.starting_zone_element = self.random.choice(elements)
+        starting_zone_key = f"{self.starting_zone_element} Biome Key"
+        self.multiworld.push_precollected(self.create_item(starting_zone_key))
 
-        if is_starting_arcana_random and is_licenses_enabled:
-            elements = ["Fire", "Water", "Earth", "Air", "Lightning"]
+        if self.options.starting_arcana_mode.value == self.options.starting_arcana_mode.option_randomize:
             self.starting_element = self.random.choice(elements)
-            license_name = f"{self.starting_element} Element License"
-            self.multiworld.push_precollected(self.create_item(license_name))
-
-        elif not is_starting_arcana_random and is_licenses_enabled:
+        else:
             self.starting_element = "Air"
-            self.multiworld.push_precollected(self.create_item("Air Element License"))
+
+        if self.options.element_licenses_mode.value == self.options.element_licenses_mode.option_required:
+            starting_license = f"{self.starting_element} Element License"
+            self.multiworld.push_precollected(self.create_item(starting_license))
 
     def create_regions(self):
         create_regions(self, self.player)
@@ -44,22 +44,20 @@ class WoLWorld(World):
         for _ in range(self.options.chaos_fragments_total.value):
             item_pool.append(self.create_item("Chaos Fragment"))
 
-        is_licenses_enabled = self.options.element_licenses_mode.value == self.options.element_licenses_mode.option_required
+        elements = ["Fire", "Water", "Earth", "Air", "Lightning"]
+        for elem in elements:
+            key_name = f"{elem} Biome Key"
+            if not self._is_precollected(key_name):
+                item_pool.append(self.create_item(key_name))
 
-        if is_licenses_enabled:
-            licenses = [
-                "Fire Element License", 
-                "Water Element License",
-                "Earth Element License", 
-                "Air Element License", 
-                "Lightning Element License"
-            ]
-            for lic in licenses:
-                if not self._is_precollected(lic):
-                    item_pool.append(self.create_item(lic))
+        if self.options.element_licenses_mode.value == self.options.element_licenses_mode.option_required:
+            for elem in elements:
+                lic_name = f"{elem} Element License"
+                if not self._is_precollected(lic_name):
+                    item_pool.append(self.create_item(lic_name))
 
         for item_name, item_data in item_table.items():
-            if item_name == "Chaos Fragment" or "Element License" in item_name:
+            if item_name == "Chaos Fragment" or "Biome Key" in item_name or "Element License" in item_name:
                 continue
             
             for _ in range(item_data.max_quantity):
@@ -72,20 +70,14 @@ class WoLWorld(World):
                 item_pool.append(self.create_item("Gold Pack"))
         elif len(item_pool) > total_locations:
             removable_item_names = ["Gold Pack", "Relic Tier 1", "Arcana Tier 1"]
-            
             for target_name in removable_item_names:
                 for i in range(len(item_pool) - 1, -1, -1):
                     if len(item_pool) <= total_locations:
                         break
-                    
                     if item_pool[i].name == target_name:
                         item_pool.pop(i)
-                
                 if len(item_pool) <= total_locations:
                     break
-                    
-            if len(item_pool) > total_locations:
-                raise Exception(f"[Wizard of Legend] Too much item ({len(item_pool)}) for location number ({total_locations}). Cannot remove any more filler items.")
 
         self.multiworld.itempool += item_pool
 
@@ -98,6 +90,8 @@ class WoLWorld(World):
         
         if getattr(self, "starting_element", None):
             slot_data["starting_element"] = self.starting_element
+        if getattr(self, "starting_zone_element", None):
+            slot_data["starting_zone_element"] = self.starting_zone_element
             
         return slot_data
 

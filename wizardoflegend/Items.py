@@ -24,7 +24,16 @@ item_table: Dict[str, WoLItemData] = {
     # -------------------------------------------------------------------------
     "Chaos Fragment":           WoLItemData("Progression", 871120001, ItemClassification.progression),
     "Boss Key":                 WoLItemData("Progression", 871120002, ItemClassification.progression, max_quantity=3),
-    "Shop Upgrade":             WoLItemData("Progression", 871120003, ItemClassification.progression, max_quantity=3),
+    "Shop Upgrade":             WoLItemData("Progression", 871120003, ItemClassification.progression, max_quantity=4),
+
+    # -------------------------------------------------------------------------
+    # Biome Keys
+    # -------------------------------------------------------------------------
+    "Fire Biome Key":            WoLItemData("Biome Keys", 871120010, ItemClassification.progression),
+    "Water Biome Key":           WoLItemData("Biome Keys", 871120011, ItemClassification.progression),
+    "Earth Biome Key":           WoLItemData("Biome Keys", 871120012, ItemClassification.progression),
+    "Air Biome Key":             WoLItemData("Biome Keys", 871120013, ItemClassification.progression),
+    "Lightning Biome Key":       WoLItemData("Biome Keys", 871120014, ItemClassification.progression),
 
     # -------------------------------------------------------------------------
     # Outfits

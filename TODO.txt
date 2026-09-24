@@ -1,10 +1,10 @@
 - Implement relic upgrade slot item and check Logic
-- Implement Location logic by tierCount to block player
 - Create readme and archipelago setup
 
 - Fix : Outfit shop UI bg size
 - Fix : TitleScreen
 - Fix : Doctor relic not dropping
+- Fix : Picking up skill with not correct license despawn it, just prevent picking up
 
 - Bonus : Let player select price in apworld option
 - Bonus : Implement deathlink
