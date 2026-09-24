@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using WoLArchipelago.Services;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Services
 {
     public static class BiomesHandler
     {

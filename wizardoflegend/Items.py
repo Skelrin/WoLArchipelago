@@ -77,6 +77,8 @@ item_table: Dict[str, WoLItemData] = {
     "Max HP Boost":             WoLItemData("Upgrades", 871123001, ItemClassification.useful, max_quantity=10),
     "Gold Pack":                WoLItemData("Upgrades", 871123002, ItemClassification.useful, max_quantity=10),
     "Chaos Gems Pack":          WoLItemData("Upgrades", 871123003, ItemClassification.useful, max_quantity=10),
+    "Relic Slot Upgrade":       WoLItemData("Upgrades", 871123004, ItemClassification.progression, max_quantity=5),
+
 
     # -------------------------------------------------------------------------
     # Traps

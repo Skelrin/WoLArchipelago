@@ -2,7 +2,7 @@ using System.IO;
 using HarmonyLib;
 using UnityEngine;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Patches
 {
     [HarmonyPatch(typeof(GameDataManager))]
     public static class APSavePatches

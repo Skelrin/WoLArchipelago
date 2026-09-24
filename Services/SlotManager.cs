@@ -1,9 +1,6 @@
 using System.Collections.Generic;
-using HarmonyLib;
-using UnityEngine;
-using UnityEngine.UI;
 
-namespace WoLArchipelago
+namespace WoLArchipelago.Services
 {
     public static class SlotManager
     {
@@ -32,7 +29,7 @@ namespace WoLArchipelago
             
             if (slotIndex < 2) return true;
 
-            return Services.ItemHandler.IsItemUnlocked(SlotItemIds[slotIndex]);
+            return ItemHandler.IsItemUnlocked(SlotItemIds[slotIndex]);
         }
 
         public static int GetFirstUnlockedSlot()
@@ -57,7 +54,7 @@ namespace WoLArchipelago
         {
             if (APManager.ElementLicensesMode == 0) {return true;}
 
-            return Services.ItemHandler.IsItemUnlocked(LicenseItemIds[skillState.element]);
+            return ItemHandler.IsItemUnlocked(LicenseItemIds[skillState.element]);
         }
     }
 }

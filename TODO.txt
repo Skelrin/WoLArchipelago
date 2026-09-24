@@ -1,4 +1,3 @@
-- Implement relic upgrade slot item and check Logic
 - Create readme and archipelago setup
 
 - Bonus : Let player select price in apworld option

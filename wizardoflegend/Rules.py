@@ -34,12 +34,12 @@ def set_rules(world, player):
         for i in range(1, 21):
             set_rule(
                 world.get_location(f"{elem} Chest Slot {i}"),
-                lambda state, zk=biome_key: state.has(zk, player)
+                lambda state, bk=biome_key: state.has(bk, player)
             )
         for count in [25, 50, 75]:
             set_rule(
                 world.get_location(f"{elem} Enemies Defeated {count} times"),
-                lambda state, zk=biome_key: state.has(zk, player)
+                lambda state, bk=biome_key: state.has(bk, player)
             )
 
     boss_mapping = {
@@ -55,7 +55,7 @@ def set_rules(world, player):
         for suffix in ["Defeated", "Defeated 5 times"]:
             set_rule(
                 world.get_location(f"{boss} {suffix}"),
-                lambda state, zk=biome_key: state.has("Boss Key", player, 1) and state.has(zk, player)
+                lambda state, bk=biome_key: state.has("Boss Key", player, 1) and state.has(bk, player)
             )
 
     shop_tiers = [

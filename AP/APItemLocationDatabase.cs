@@ -110,6 +110,7 @@ public static class APItemLocationDatabase
         AddItem("Max HP Boost", 871123001);
         AddItem("Gold Pack", 871123002);
         AddItem("Chaos Gems Pack", 871123003);
+        AddItem("Relic Slot Upgrade", 871123004);
 
         // Traps
         AddItem("Cursed Trap", 871124001);

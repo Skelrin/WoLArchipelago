@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
-using UnityEngine;
+using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {

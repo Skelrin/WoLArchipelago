@@ -12,6 +12,7 @@ namespace WoLArchipelago.Services
 
         public static Dictionary<string, int> ChestCounts { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         public static Dictionary<string, int> EnemyCounts { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        public static List<string> SavedHubRelics { get; set; } = new List<string>();
 
         public static void LoadData()
         {
@@ -20,6 +21,7 @@ namespace WoLArchipelago.Services
             IsStartingInventoryApplied = false;
             ChestCounts.Clear();
             EnemyCounts.Clear();
+            SavedHubRelics.Clear();
 
             string path = StorageService.GetDataFilePath();
             if (!File.Exists(path))
@@ -47,6 +49,7 @@ namespace WoLArchipelago.Services
                         else if (key == nameof(TotalChestsOpened)) TotalChestsOpened = val;
                         else if (key.StartsWith("Chest_")) ChestCounts[key.Substring(6)] = val;
                         else if (key.StartsWith("Enemy_")) EnemyCounts[key.Substring(6)] = val;
+                        else if (key == nameof(SavedHubRelics)) SavedHubRelics = [.. valStr.Split(',')];
                     }
                     else if (key == nameof(IsStartingInventoryApplied) && bool.TryParse(valStr, out bool boolVal))
                     {
@@ -68,7 +71,8 @@ namespace WoLArchipelago.Services
                 {
                     $"{nameof(TotalDashes)}={TotalDashes}",
                     $"{nameof(TotalChestsOpened)}={TotalChestsOpened}",
-                    $"{nameof(IsStartingInventoryApplied)}={IsStartingInventoryApplied}"
+                    $"{nameof(IsStartingInventoryApplied)}={IsStartingInventoryApplied}",
+                    $"{nameof(SavedHubRelics)}={string.Join(",", SavedHubRelics.ToArray())}"
                 };
 
                 foreach (KeyValuePair<string, int> kvp in ChestCounts) lines.Add($"Chest_{kvp.Key}={kvp.Value}");
