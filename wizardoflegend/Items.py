@@ -69,15 +69,13 @@ item_table: Dict[str, WoLItemData] = {
     "Air Element License":       WoLItemData("Licenses", 871122013, ItemClassification.progression),
     "Lightning Element License": WoLItemData("Licenses", 871122014, ItemClassification.progression),
 
-    # TODO : Add Relics Slots
-
     # -------------------------------------------------------------------------
     # Stats & Upgrades
     # -------------------------------------------------------------------------
     "Max HP Boost":             WoLItemData("Upgrades", 871123001, ItemClassification.useful, max_quantity=10),
     "Gold Pack":                WoLItemData("Upgrades", 871123002, ItemClassification.useful, max_quantity=10),
-    "Chaos Gems Pack":          WoLItemData("Upgrades", 871123003, ItemClassification.useful, max_quantity=10),
-    "Relic Slot Upgrade":       WoLItemData("Upgrades", 871123004, ItemClassification.progression, max_quantity=5),
+    "Chaos Gems Pack":          WoLItemData("Upgrades", 871123003, ItemClassification.useful, max_quantity=5),
+    "Relic Slot Upgrade":       WoLItemData("Upgrades", 871123004, ItemClassification.progression, max_quantity=11),
 
 
     # -------------------------------------------------------------------------
@@ -93,17 +91,6 @@ item_table: Dict[str, WoLItemData] = {
     "Relic Tier 3":             WoLItemData("Relics", 871125003, max_quantity=41),
     "Relic Tier 4":             WoLItemData("Relics", 871125004, ItemClassification.useful, max_quantity=36),
     "Relic Tier 5":             WoLItemData("Relics", 871125005, ItemClassification.useful, max_quantity=77),
-
-    # -------------------------------------------------------------------------
-    # Doctor Relics
-    # -------------------------------------------------------------------------
-    "DoctorPrescription":       WoLItemData("Doctor Relics", 871125006),
-    "DoctorPlacebo":            WoLItemData("Doctor Relics", 871125007),
-    "DoctorDiscount":           WoLItemData("Doctor Relics", 871125008),
-    "DoctorVial":               WoLItemData("Doctor Relics", 871125009),
-    "CritHealChanceUp":         WoLItemData("Doctor Relics", 871125010),
-    "HealRestock":              WoLItemData("Doctor Relics", 871125011),
-    "DoctorHpDamage":           WoLItemData("Doctor Relics", 871125012),
 
     # -------------------------------------------------------------------------
     # Generic Arcanas

@@ -20,12 +20,6 @@ namespace WoLArchipelago.Patches
         [HarmonyPrefix]
         public static bool Prefix(NextLevelLoader __instance, Collider2D col)
         {   
-            if (DebugController.tpLastBoss)
-            {
-                GameController.tierCount = 2;
-                GameController.stageCount = 2;
-            }
-
             int currentTier = GameController.tierCount;
             int currentStage = GameController.stageCount;
 
@@ -52,8 +46,6 @@ namespace WoLArchipelago.Patches
 
         private static bool IsStageLocked(int tier, int stage)
         {
-            if (DebugController.BypassBoss) return false;
-
             if (stage == 2)
                 return !ItemHandler.CanAccessBossStage(tier, stage);
 
@@ -100,7 +92,7 @@ namespace WoLArchipelago.Patches
     public class SaveOnLevelChangePatch
     {
         [HarmonyPrefix]
-        public static void Prefix(string givenLevelName)
+        public static void Prefix(ref string givenLevelName)
         {
             if (givenLevelName == "Hub" || givenLevelName == "PlayerRoom" || 
                 givenLevelName == "TitleScreen" || givenLevelName == "InitialLoad" || 
@@ -108,7 +100,30 @@ namespace WoLArchipelago.Patches
             {
                 BiomesHandler.ResetRun();
             }
+            else if (BiomesHandler.AllBiomes.Contains(givenLevelName))
+            {
+                BiomesHandler.OrganizeLevelList();
+                
+                givenLevelName = GameController.levelNameList[GameController.tierCount];
+            }
+
             DataManager.SaveData();
+        }
+    }
+
+    [HarmonyPatch(typeof(GameController))]
+    public static class DisableNextLevelShufflePatch
+    {
+        [HarmonyPatch(nameof(GameController.NextLevelName), MethodType.Setter)]
+        [HarmonyPrefix]
+        public static bool Prefix()
+        {
+            if (GameController.loadingScreen != null && GameController.loadingScreen.gameProgressBoard != null)
+            {
+                GameController.loadingScreen.gameProgressBoard.InitializeTierOrders();
+            }
+
+            return false;
         }
     }
 }

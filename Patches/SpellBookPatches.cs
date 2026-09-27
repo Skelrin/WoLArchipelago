@@ -141,6 +141,13 @@ namespace WoLArchipelago.Patches
                 
                 if (currentSkill == null) return true;
 
+                if (!SlotManager.PlayerHasLicenseToPickupSkill(currentSkill))
+                {
+                    SoundManager.PlayAudio("MenuError");
+                    __result = false;
+                    return false;
+                }
+
                 int targetSlot = 0;
                 switch (givenFocus)
                 {

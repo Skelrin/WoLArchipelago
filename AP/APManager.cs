@@ -11,6 +11,7 @@ namespace WoLArchipelago
     public class APManager
     {
         public ArchipelagoSession session { get; private set; }
+        private TlsProxyServer tlsProxy;
         private string lastHost;
         private int lastPort;
         private string lastSlot;
@@ -52,7 +53,23 @@ namespace WoLArchipelago
                 {
                     DisconnectInternal();
 
-                    session = ArchipelagoSessionFactory.CreateSession(host, port);
+                    string connectUri;
+
+                    if (host.Contains("archipelago.gg") || host.StartsWith("wss://"))
+                    {
+                        string cleanHost = host.Replace("wss://", "").Replace("ws://", "");
+
+                        tlsProxy = new TlsProxyServer(cleanHost, port);
+                        tlsProxy.Start();
+
+                        connectUri = $"ws://127.0.0.1:{tlsProxy.LocalPort}";
+                    }
+                    else
+                    {
+                        connectUri = host.StartsWith("ws://") ? host : $"ws://{host}:{port}";
+                    }
+
+                    session = ArchipelagoSessionFactory.CreateSession(connectUri);
                     LoginResult result = session.TryConnectAndLogin(
                         "Wizard of Legend",
                         slotName,
@@ -192,6 +209,13 @@ namespace WoLArchipelago
                 }
                 session = null;
             }
+
+            if (tlsProxy != null)
+            {
+                tlsProxy.Stop();
+                tlsProxy = null;
+            }
+
             IsConnected = false;
             StatusMessage = "Offline";
             Plugin.Log.LogWarning("[AP] Offline mode active.");

@@ -56,7 +56,7 @@ namespace WoLArchipelago.Patches
     public class PlayerGiveDesignatedItemPatch
     {
         [HarmonyPostfix]
-        static void Postfix(Player __instance)
+        public static void Postfix(Player __instance)
         {
             string loadedLevelName = GameController.currentLevelName;
             if (loadedLevelName == "PlayerRoom" || loadedLevelName == "Hub")

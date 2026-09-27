@@ -8,9 +8,9 @@ namespace WoLArchipelago
 
         private bool showUI = false;
         private Rect windowRect = new Rect(40, 40, 350, 300);
-        private string uiHost = "127.0.0.1";
-        private string uiPort = "38281";
-        private string uiSlot = "Skelrin";
+        private string uiHost = "archipelago.gg";
+        private string uiPort = "";
+        private string uiSlot = "";
         private string uiPassword = "";
         private bool hasConnectedOnce = false;
 

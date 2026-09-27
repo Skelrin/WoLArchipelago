@@ -258,6 +258,8 @@ namespace WoLArchipelago.Services
         {
             Player player = GetActivePlayer(mustBeAlive: true);
 
+            if(player == null) return;
+
             if (!LootManager.skillTierDict.TryGetValue(skillTier - 1, out List<string> arcanaPool) || arcanaPool == null)
             {
                 Plugin.Log.LogError($"[AP] No arcana found for tier {skillTier}.");
@@ -284,7 +286,7 @@ namespace WoLArchipelago.Services
 
             player.HandleSkillUnlock(selectedArcana,true);
 
-            if (player != null && GameController.inGameScene)
+            if (GameController.inGameScene)
             {
                 ItemSpawner itemSpawner = GameController.itemSpawner ?? ItemSpawner.Instance;
                 if (itemSpawner != null)

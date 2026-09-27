@@ -122,15 +122,6 @@ public static class APItemLocationDatabase
         AddItem("Relic Tier 4", 871125004);
         AddItem("Relic Tier 5", 871125005);
 
-        // Doctor Relics
-        AddItem("DoctorPrescription", 871125006);
-        AddItem("DoctorPlacebo", 871125007);
-        AddItem("DoctorDiscount", 871125008);
-        AddItem("DoctorVial", 871125009);
-        AddItem("CritHealChanceUp", 871125010);
-        AddItem("HealRestock", 871125011);
-        AddItem("DoctorHpDamage", 871125012);
-
         // Generic Arcanas
         AddItem("Arcana Tier 1", 871126001);
         AddItem("Arcana Tier 2", 871126002);
@@ -174,37 +165,39 @@ public static class APItemLocationDatabase
         {
             AddLocation(m + " Defeated");
             AddLocation(m + " Defeated 5 times");
-            AddLocation(m + " Defeated 10 times");
         }
 
         // BASE ENEMIES
         string[] enemies =
         {
-            "Blob", 
-            "BlobRoller", 
-            "Ghoul", 
-            "EnemyTurret", 
-            "Archer", 
-            "Knight", 
-            "Mage", 
-            "Rogue", 
-            "Lancer", 
+            "Blob",
+            "BlobRoller",
+            "BlobSpitter",
+            "Ghoul",
+            "GhoulLarge",
+            "Coffin",
+            "EnemyTurret",
+            "Archer",
+            "Knight",
+            "Mage",
+            "Rogue",
+            "Lancer",
             "Summoner"
         };
         foreach (string e in enemies)
         {
             AddLocation(e + " Defeated 25 times");
             AddLocation(e + " Defeated 50 times");
-            AddLocation(e + " Defeated 75 times");
         }
+
+        AddLocation("MovingStatue Defeated 10 times");
+        AddLocation("MovingStatue Defeated 20 times");
 
         AddLocation("MimicEnemy Defeated 5 times");
         AddLocation("MimicEnemy Defeated 10 times");
-        AddLocation("MimicEnemy Defeated 20 times");
 
         AddLocation("Pinata Defeated");
         AddLocation("Pinata Defeated 5 times");
-        AddLocation("Pinata Defeated 10 times");
 
         // ELEMENTAL ENEMIES
         string[] elements = ["Fire", "Water", "Earth", "Air", "Lightning"];
@@ -212,7 +205,6 @@ public static class APItemLocationDatabase
         {
             AddLocation(e + " Enemies Defeated 25 times");
             AddLocation(e + " Enemies Defeated 50 times");
-            AddLocation(e + " Enemies Defeated 75 times");
         }
 
         // SPAWN SHOPS
@@ -227,7 +219,7 @@ public static class APItemLocationDatabase
         AddMultipleLocations("Nocturne the Cardist Slot", 10);
         AddMultipleLocations("Cremire the Collector Slot", 10);
         AddMultipleLocations("Doki the Banker Slot", 10);
-        AddMultipleLocations("Strange Time Keeper Slot", 5);
+        AddMultipleLocations("Strange Time Keeper Slot", 2);
 
         // CHEST MILESTONES
         foreach (string e in elements)
@@ -236,7 +228,6 @@ public static class APItemLocationDatabase
         }
         AddMultipleLocations("MiniBoss Chest Slot", 40);
         AddMultipleLocations("Boss Chest Slot", 20);
-        AddMultipleLocations("Party Chest Slot", 2);
 
         int[] milestones = [10, 25, 50, 75, 100];
         foreach (int count in milestones)
@@ -259,10 +250,18 @@ public static class APItemLocationDatabase
         AddLocation("Break 50 Paintings");
         AddLocation("Break 100 Paintings");
 
+        AddLocation("Die 5 times");
         AddLocation("Die 10 times");
+
+        AddLocation("Fall 25 times");
         AddLocation("Fall 50 times");
 
         AddLocation("Dash 100 times");
         AddLocation("Dash 500 times");
+
+        AddLocation("Have 500 chaos gems");
+        AddLocation("Have 1000 gold");
+
+        AddLocation("Perfect a boss");
     }
 }

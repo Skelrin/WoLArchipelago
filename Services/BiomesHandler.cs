@@ -21,19 +21,17 @@ namespace WoLArchipelago.Services
 
         public static readonly List<string> AllBiomes = BiomeKeyMap.Keys.ToList();
 
-        // Prevents re-running generation multiple times during the same tier transition
         private static int lastOrganizedTier = -1;
 
         public static List<string> GetUnlockedBiomes() => [.. BiomeKeyMap.Where(kvp => ItemHandler.IsItemUnlocked(kvp.Value)).Select(kvp => kvp.Key)];
 
-        // Reset state tracking when returning to the Hub or starting a new run
         public static void ResetRun() => lastOrganizedTier = -1;
 
         public static void OrganizeLevelList()
         {
             int currentTier = GameController.tierCount;
 
-            if (currentTier < 0 || currentTier >= GameController.maxBaseTierCount || lastOrganizedTier == currentTier)
+            if (currentTier < 0 || currentTier >= GameController.maxBaseTierCount || lastOrganizedTier != -1)
             {
                 return;
             }
@@ -42,39 +40,11 @@ namespace WoLArchipelago.Services
 
             if (unlockedBiomes.Count == 0) unlockedBiomes = [.. AllBiomes];
 
-            if (currentTier == 0)
-            {
-                List<string> fullList = GenerateRunBiomes(unlockedBiomes);
-                GameController.levelNameList = fullList;
-            }
-            else
-            {
-                // Preserve cleared tiers and re-roll remaining future slots with updated unlocked keys
-                // In case of player receiving a new key during a tier
-                List<string> updatedList = GameController.levelNameList.Take(currentTier).ToList();
-
-                for (int slot = currentTier; slot < GameController.maxBaseTierCount; slot++)
-                {
-                    List<string> candidateBiomes = GetCandidates(unlockedBiomes, updatedList);
-                    ShuffleList(candidateBiomes);
-                    updatedList.Add(candidateBiomes[0]);
-                }
-
-                // Append unselected biomes to satisfy base game array bounds and lookup logic
-                foreach (string biome in AllBiomes)
-                {
-                    if (!updatedList.Contains(biome))
-                    {
-                        updatedList.Add(biome);
-                    }
-                }
-
-                GameController.levelNameList = updatedList;
-            }
+            List<string> fullList = GenerateRunBiomes(unlockedBiomes);
+            GameController.levelNameList = fullList;
 
             lastOrganizedTier = currentTier;
 
-            // Immediately rebuild UI board to mirror updated biome order
             if (GameController.loadingScreen != null && GameController.loadingScreen.gameProgressBoard != null)
             {
                 GameController.loadingScreen.gameProgressBoard.InitializeTierOrders();

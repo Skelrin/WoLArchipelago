@@ -1,8 +1,8 @@
 from BaseClasses import Region
 from .Locations import WoLLocation, location_table
 
-STAGE_3_LOCS = {"Third Council Member Defeated", "Party Chest Slot 2", "Pinata Defeated 10 times"}
-STAGE_2_LOCS = {"Second Council Member Defeated", "Party Chest Slot 1", "Dash 500 times", "Break 100 Paintings", "Pinata Defeated 5 times"}
+STAGE_3_LOCS = {"Third Council Member Defeated","Have 1000 gold","Have 500 chaos gems"}
+STAGE_2_LOCS = {"Second Council Member Defeated", "Dash 500 times", "Break 100 Paintings", "Pinata Defeated 5 times","Perfect a boss"}
 NPCS = ("Doctor", "Savile", "Nocturne", "Cremire", "Doki")
 ELEMENTS = ("Fire", "Water", "Earth", "Air", "Lightning")
 
@@ -16,7 +16,7 @@ def _get_target_region(loc_name: str, loc_data, regions: dict) -> Region:
     if "Strange Time Keeper" in loc_name or loc_name == "FinalBoss Defeated":
         return regions["Final Boss"]
 
-    if "Stage 3" in loc_name or loc_name in STAGE_3_LOCS or "Defeated 75 times" in loc_name or ("Super" in loc_name and "Defeated 10 times" in loc_name):
+    if "Stage 3" in loc_name or loc_name in STAGE_3_LOCS or ("Super" in loc_name and "Defeated 10 times" in loc_name):
         return regions["Stage 3"]
 
     if "Stage 2" in loc_name or loc_name in STAGE_2_LOCS or "Defeated 50 times" in loc_name or ("Super" in loc_name and "Defeated 5 times" in loc_name):
@@ -27,7 +27,10 @@ def _get_target_region(loc_name: str, loc_data, regions: dict) -> Region:
 
     if "MimicEnemy" in loc_name:
         slot_value = int(loc_name.rsplit(" ")[-2])
-        thresholds = (9, 19)
+        thresholds = (4, 9)
+    elif "MovingStatue" in loc_name:
+            slot_value = int(loc_name.rsplit(" ")[-2])
+            thresholds = (9, 19)
     else:
         if "MiniBoss Chest Slot" in loc_name or "Nox the Unfortunate Slot" in loc_name:
             thresholds = (14, 28)

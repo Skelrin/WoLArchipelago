@@ -6,8 +6,8 @@ namespace WoLArchipelago.Patches
     public class ShufflerNpcPatches
     {
         [HarmonyPostfix]
-        [HarmonyPatch("OnCardSelected")]
-        public static void OnCardSelectedPostfix()
+        [HarmonyPatch("InitCardShuffle")]
+        public static void InitCardShufflePostfix()
         {
             string locName = "Nocturne the Cardist Slot {0}";
 

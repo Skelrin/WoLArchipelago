@@ -182,7 +182,6 @@ namespace WoLArchipelago.Services
 
         public static void LockStartingItems(GameData gameData)
         {
-            gameData.UpdateItemDataEntry(PlayerStartItem.staticID, false);
             gameData.UpdateItemDataEntry(BuffWithFriendship.staticID, false);
             gameData.UpdateItemDataEntry(WaterChargeFamiliarItem.staticID, false);
         }

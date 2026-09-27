@@ -33,28 +33,27 @@ minibosses = ["SuperArcher", "SuperCoffin", "SuperKnight", "SuperLancer", "Super
 for m in minibosses:
     _add_location(f"{m} Defeated", "Miniboss")
     _add_location(f"{m} Defeated 5 times", "Miniboss")
-    _add_location(f"{m} Defeated 10 times", "Miniboss")
 
 # BASE ENEMIES
-enemies = ["Blob", "BlobRoller", "Ghoul", "EnemyTurret", "Archer", "Knight", "Mage", "Rogue", "Lancer", "Summoner"]
+enemies = ["Blob", "BlobRoller", "BlobSpitter", "Ghoul", "GhoulLarge", "Coffin", "EnemyTurret", "Archer", "Knight", "Mage", "Rogue", "Lancer", "Summoner"]
 for e in enemies:
     _add_location(f"{e} Defeated 25 times", "Enemies")
     _add_location(f"{e} Defeated 50 times", "Enemies")
-    _add_location(f"{e} Defeated 75 times", "Enemies")
+
+_add_location("MovingStatue Defeated 10 times", "Enemies")
+_add_location("MovingStatue Defeated 20 times", "Enemies")
 
 _add_location("MimicEnemy Defeated 5 times", "Enemies")
 _add_location("MimicEnemy Defeated 10 times", "Enemies")
-_add_location("MimicEnemy Defeated 20 times", "Enemies")
+
 _add_location("Pinata Defeated", "Dungeon")
 _add_location("Pinata Defeated 5 times", "Dungeon")
-_add_location("Pinata Defeated 10 times", "Dungeon")
 
 # ELEMENTAL ENEMIES
 elements = ["Fire", "Water", "Earth", "Air", "Lightning"]
 for elem in elements:
     _add_location(f"{elem} Enemies Defeated 25 times", "Elemental Enemies")
     _add_location(f"{elem} Enemies Defeated 50 times", "Elemental Enemies")
-    _add_location(f"{elem} Enemies Defeated 75 times", "Elemental Enemies")
 
 # SPAWN SHOPS
 _add_multiple_locations("Outfit Shop Slot", 16, "Spawn Shops")
@@ -68,7 +67,7 @@ _add_multiple_locations("Nox the Unfortunate Slot", 40, "Dungeon")
 _add_multiple_locations("Nocturne the Cardist Slot", 10, "Dungeon")
 _add_multiple_locations("Cremire the Collector Slot", 10, "Dungeon")
 _add_multiple_locations("Doki the Banker Slot", 10, "Dungeon")
-_add_multiple_locations("Strange Time Keeper Slot", 5, "Dungeon")
+_add_multiple_locations("Strange Time Keeper Slot", 2, "Dungeon")
 
 # CHEST MILESTONES
 for elem in elements:
@@ -76,7 +75,6 @@ for elem in elements:
 
 _add_multiple_locations("MiniBoss Chest Slot", 40, "Chests")
 _add_multiple_locations("Boss Chest Slot", 20, "Chests")
-_add_multiple_locations("Party Chest Slot", 2, "Chests")
 
 chest_milestones = [10, 25, 50, 75, 100]
 for count in chest_milestones:
@@ -96,7 +94,17 @@ _add_location("Third Council Member Defeated", "Progression")
 
 _add_location("Break 50 Paintings", "Milestones")
 _add_location("Break 100 Paintings", "Milestones")
+
+_add_location("Die 5 times", "Milestones")
 _add_location("Die 10 times", "Milestones")
+
+_add_location("Fall 25 times", "Milestones")
 _add_location("Fall 50 times", "Milestones")
+
 _add_location("Dash 100 times", "Milestones")
 _add_location("Dash 500 times", "Milestones")
+
+_add_location("Have 500 chaos gems", "Milestones")
+_add_location("Have 1000 gold", "Milestones")
+
+_add_location("Perfect a boss", "Milestones")

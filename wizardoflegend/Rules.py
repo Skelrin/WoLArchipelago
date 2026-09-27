@@ -36,7 +36,7 @@ def set_rules(world, player):
                 world.get_location(f"{elem} Chest Slot {i}"),
                 lambda state, bk=biome_key: state.has(bk, player)
             )
-        for count in [25, 50, 75]:
+        for count in [25, 50]:
             set_rule(
                 world.get_location(f"{elem} Enemies Defeated {count} times"),
                 lambda state, bk=biome_key: state.has(bk, player)

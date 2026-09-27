@@ -49,13 +49,19 @@ namespace WoLArchipelago.Services
                         else if (key == nameof(TotalChestsOpened)) TotalChestsOpened = val;
                         else if (key.StartsWith("Chest_")) ChestCounts[key.Substring(6)] = val;
                         else if (key.StartsWith("Enemy_")) EnemyCounts[key.Substring(6)] = val;
-                        else if (key == nameof(SavedHubRelics)) SavedHubRelics = [.. valStr.Split(',')];
                     }
                     else if (key == nameof(IsStartingInventoryApplied) && bool.TryParse(valStr, out bool boolVal))
                     {
                         IsStartingInventoryApplied = boolVal;
                     }
+                    else if (key == nameof(SavedHubRelics))
+                    {
+                        SavedHubRelics = string.IsNullOrEmpty(valStr) 
+                            ? [] 
+                            : [.. valStr.Split(',')];
+                    }
                 }
+                Plugin.Log.LogInfo("SavedHubRelics : " + string.Join(",",SavedHubRelics.ToArray()));
             }
             catch (Exception ex)
             {
