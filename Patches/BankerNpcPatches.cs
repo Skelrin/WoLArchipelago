@@ -2,8 +2,11 @@ using HarmonyLib;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patch to detect when player successfully trade gold with Doki the Banker to send an Archipelago check.
+    /// </summary>
     [HarmonyPatch(typeof(BankerNpc))]
-    public class BankerNpcPatches
+    public static class BankerNpcPatches
     {
         [HarmonyPostfix]
         [HarmonyPatch("TradeGold")]

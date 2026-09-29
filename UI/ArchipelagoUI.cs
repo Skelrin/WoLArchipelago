@@ -2,44 +2,58 @@ using UnityEngine;
 
 namespace WoLArchipelago
 {
+    /// <summary>
+    /// GUI component rendering the Archipelago connection panel and disconnection alert.
+    /// </summary>
     public class ArchipelagoUI : MonoBehaviour
     {
         public static ArchipelagoUI Instance { get; private set; }
 
-        private bool showUI = false;
-        private Rect windowRect = new Rect(40, 40, 350, 300);
-        private string uiHost = "archipelago.gg";
-        private string uiPort = "";
-        private string uiSlot = "";
-        private string uiPassword = "";
-        private bool hasConnectedOnce = false;
+        private bool _showUI;
+        private Rect _windowRect = new(40f, 40f, 350f, 300f);
+        private string _uiHost = "archipelago.gg";
+        private string _uiPort = "";
+        private string _uiSlot = "";
+        private string _uiPassword = "";
+        private bool _hasConnectedOnce;
 
         private void Awake()
         {
             Instance = this;
         }
 
+        public void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                Instance?.Toggle();
+            }
+        }
+
         public void ToggleHasConnectedOnce()
         {
-            hasConnectedOnce = !hasConnectedOnce;
+            _hasConnectedOnce = !_hasConnectedOnce;
         }
 
         public void Toggle()
         {
-            showUI = !showUI;
+            _showUI = !_showUI;
         }
 
-        public void Hide() => showUI = false;
+        public void Hide()
+        {
+            _showUI = false;
+        }
 
         private void OnGUI()
         {
-            if (showUI)
+            if (_showUI)
             {
                 GUI.skin = null;
-                windowRect = GUI.Window(999, windowRect, DrawArchipelagoWindow, "Archipelago Connection");
+                _windowRect = GUI.Window(999, _windowRect, DrawArchipelagoWindow, "Archipelago Connection");
             }
 
-            if (!Plugin.AP.IsConnected && hasConnectedOnce)
+            if (Plugin.AP != null && !Plugin.AP.IsConnected && _hasConnectedOnce)
             {
                 GUIStyle warningStyle = new GUIStyle(GUI.skin.box)
                 {
@@ -60,49 +74,59 @@ namespace WoLArchipelago
 
         private void DrawArchipelagoWindow(int windowID)
         {
-            GUI.Box(new Rect(0, 0, windowRect.width, windowRect.height), "", GUI.skin.box);
+            GUI.Box(new Rect(0, 0, _windowRect.width, _windowRect.height), "", GUI.skin.box);
             GUILayout.BeginVertical();
             GUILayout.Space(10);
 
             GUILayout.Label("Host:");
-            uiHost = GUILayout.TextField(uiHost);
+            _uiHost = GUILayout.TextField(_uiHost);
+
             GUILayout.Label("Port:");
-            uiPort = GUILayout.TextField(uiPort);
+            _uiPort = GUILayout.TextField(_uiPort);
+
             GUILayout.Label("Slot Name:");
-            uiSlot = GUILayout.TextField(uiSlot);
+            _uiSlot = GUILayout.TextField(_uiSlot);
+
             GUILayout.Label("Password:");
-            uiPassword = GUILayout.PasswordField(uiPassword, '*');
+            _uiPassword = GUILayout.PasswordField(_uiPassword, '*');
             GUILayout.Space(10);
 
-            if (!Plugin.AP.IsConnected)
+            if (Plugin.AP != null && !Plugin.AP.IsConnected)
             {
-                string buttonText = hasConnectedOnce ? "Reconnect" : "Connect";
+                string buttonText = _hasConnectedOnce ? "Reconnect" : "Connect";
 
                 if (GUILayout.Button(buttonText, GUILayout.Height(30)))
                 {
-                    if (int.TryParse(uiPort, out int port)) 
+                    if (int.TryParse(_uiPort, out int port))
                     {
-                        Plugin.AP.Connect(uiHost, port, uiSlot, uiPassword, isReconnecting: hasConnectedOnce);
+                        Plugin.AP.Connect(_uiHost, port, _uiSlot, _uiPassword, isReconnecting: _hasConnectedOnce);
                     }
-                    else 
+                    else
                     {
-                        Plugin.Log.LogError("Invalid Port!");
+                        Plugin.Log.LogError("[AP] Invalid Port entered in UI.");
                     }
                 }
             }
             else
             {
-                hasConnectedOnce = true;
+                _hasConnectedOnce = true;
 
-                if (GUILayout.Button("Disconnect", GUILayout.Height(30))) 
+                if (GUILayout.Button("Disconnect", GUILayout.Height(30)))
                 {
-                    Plugin.AP.Disconnect();
+                    if (Plugin.AP != null)
+                    {
+                        Plugin.AP.Disconnect();
+                    }
                 }
             }
 
             GUILayout.Space(10);
-            GUILayout.Label($"Status: {Plugin.AP.StatusMessage}");
+
+            string statusMessage = (Plugin.AP != null) ? Plugin.AP.StatusMessage : "Disconnected";
+            GUILayout.Label(string.Format("Status: {0}", statusMessage));
+
             GUILayout.EndVertical();
+
             GUI.DragWindow();
         }
     }

@@ -2,6 +2,9 @@ using HarmonyLib;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patch to detect when player successfully give an arcana to Nocturne the Cardist to send an Archipelago check.
+    /// </summary>
     [HarmonyPatch(typeof(ShufflerNpc))]
     public class ShufflerNpcPatches
     {

@@ -4,7 +4,11 @@ using System.Linq;
 
 namespace WoLArchipelago.Services
 {
-    public static class StartingInventoryHandler
+    /// <summary>
+    /// Handles player starting inventory initialization upon first connection to the multiworld.
+    /// Clears default skills and relics and grants starting skills according to slot options (element-filtered or randomized).
+    /// </summary>
+    public class StartingInventoryHandler
     {
         public static void ApplyArchipelagoStartingSkills()
         {
@@ -143,7 +147,10 @@ namespace WoLArchipelago.Services
             storedData.signatureUnlocked = signatureUnlocked;
         }
 
-        public static void LockStartingSkillsOnDataDictionary(GameData gameData)
+        /// <summary>
+        /// Locks default starting arcana in persistent game data so they can be distributed via the Archipelago pool.
+        /// </summary>
+        private static void LockStartingSkillsOnDataDictionary(GameData gameData)
         {
             if (gameData?.skillDataDictionary == null) return;
 
@@ -158,7 +165,10 @@ namespace WoLArchipelago.Services
             }
         }
 
-        public static void LockStartingSkillsOnPlayer(Player player)
+        /// <summary>
+        /// Locks default starting arcana on the live player instance.
+        /// </summary>
+        private static void LockStartingSkillsOnPlayer(Player player)
         {
             if (player?.skillsDict == null) return;
 
@@ -180,7 +190,10 @@ namespace WoLArchipelago.Services
             }
         }
 
-        public static void LockStartingItems(GameData gameData)
+        /// <summary>
+        /// Locks default starting relics in save data to ensure they are properly managed by the Archipelago item pool.
+        /// </summary>
+        private static void LockStartingItems(GameData gameData)
         {
             gameData.UpdateItemDataEntry(BuffWithFriendship.staticID, false);
             gameData.UpdateItemDataEntry(WaterChargeFamiliarItem.staticID, false);

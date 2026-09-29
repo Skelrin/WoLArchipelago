@@ -4,89 +4,105 @@ using UnityEngine.UI;
 
 namespace WoLArchipelago.Patches
 {
-    [HarmonyPatch(typeof(TitleScreen), "Start")]
-    public class TitleScreenStartPatch
+    /// <summary>
+    /// Patches customizing the title screen UI layout and menu navigation for Archipelago integration.
+    /// </summary>
+    public static class TitleScreenPatches
     {
-        [HarmonyPostfix]
-        public static void Postfix(TitleScreen __instance)
+        [HarmonyPatch(typeof(TitleScreen), "Start")]
+        public class TitleScreenStartPatch
         {
-            try
+            /// <summary>
+            /// Hides TwoPlayers and Versus button, replace SinglePlayer by Archipelago connection button.
+            /// </summary>
+            [HarmonyPostfix]
+            public static void Postfix(TitleScreen __instance)
             {
-                Transform singleBtn = __instance.transform.Find("TitleMenu/SinglePlayer");
-                Transform coopBtn = __instance.transform.Find("TitleMenu/TwoPlayers");
-                Transform versusBtn = __instance.transform.Find("TitleMenu/Versus");
-                Transform optionsBtn = __instance.transform.Find("TitleMenu/Options");
-                Transform creditsBtn = __instance.transform.Find("TitleMenu/Credits");
-                Transform exitBtn = __instance.transform.Find("TitleMenu/Exit");
-
-                if (singleBtn != null)
+                try
                 {
-                    Text textComp = singleBtn.GetComponent<Text>();
-                    if (textComp != null)
+                    Transform singleBtn = __instance.transform.Find("TitleMenu/SinglePlayer");
+                    Transform coopBtn = __instance.transform.Find("TitleMenu/TwoPlayers");
+                    Transform versusBtn = __instance.transform.Find("TitleMenu/Versus");
+                    Transform optionsBtn = __instance.transform.Find("TitleMenu/Options");
+                    Transform creditsBtn = __instance.transform.Find("TitleMenu/Credits");
+                    Transform exitBtn = __instance.transform.Find("TitleMenu/Exit");
+
+                    if (singleBtn != null)
                     {
-                        textComp.text = "CONNECT TO ARCHIPELAGO";
+                        Text textComp = singleBtn.GetComponent<Text>();
+                        if (textComp != null)
+                        {
+                            textComp.text = "CONNECT TO ARCHIPELAGO";
+                        }
                     }
-                }
 
-                if (singleBtn != null && coopBtn != null && optionsBtn != null && creditsBtn != null && exitBtn != null)
+                    if (singleBtn != null && coopBtn != null && optionsBtn != null && creditsBtn != null && exitBtn != null)
+                    {
+                        float spacing = coopBtn.localPosition.y - singleBtn.localPosition.y;
+
+                        optionsBtn.localPosition = new Vector3(optionsBtn.localPosition.x, singleBtn.localPosition.y + spacing, optionsBtn.localPosition.z);
+                        creditsBtn.localPosition = new Vector3(creditsBtn.localPosition.x, singleBtn.localPosition.y + (spacing * 2), creditsBtn.localPosition.z);
+                        exitBtn.localPosition = new Vector3(exitBtn.localPosition.x, singleBtn.localPosition.y + (spacing * 3), exitBtn.localPosition.z);
+                    }
+
+                    coopBtn?.gameObject.SetActive(false);
+                    versusBtn?.gameObject.SetActive(false);
+                }
+                catch (System.Exception ex)
                 {
-                    float spacing = coopBtn.localPosition.y - singleBtn.localPosition.y;
-
-                    optionsBtn.localPosition = new Vector3(optionsBtn.localPosition.x, singleBtn.localPosition.y + spacing, optionsBtn.localPosition.z);
-                    creditsBtn.localPosition = new Vector3(creditsBtn.localPosition.x, singleBtn.localPosition.y + (spacing * 2), creditsBtn.localPosition.z);
-                    exitBtn.localPosition = new Vector3(exitBtn.localPosition.x, singleBtn.localPosition.y + (spacing * 3), exitBtn.localPosition.z);
+                    Plugin.Log.LogError($"[AP UI] Error modifying title screen: {ex}");
                 }
-
-                coopBtn?.gameObject.SetActive(false);
-                versusBtn?.gameObject.SetActive(false);
-            }
-            catch (System.Exception ex)
-            {
-                Plugin.Log.LogError($"[AP UI] Error modifying title screen: {ex}");
             }
         }
-    }
 
-    [HarmonyPatch(typeof(TitleScreen), nameof(TitleScreen.SelectMenuIndex), new System.Type[] { typeof(int), typeof(bool) })]
-    public class TitleScreenNavigationPatch
-    {
-        [HarmonyPrefix]
-        public static void Prefix(ref int newIndex)
+        /// <summary>
+        /// Prevent navigating on hidden buttons.
+        /// </summary>
+        [HarmonyPatch(typeof(TitleScreen), nameof(TitleScreen.SelectMenuIndex), new System.Type[] { typeof(int), typeof(bool) })]
+        public class TitleScreenNavigationPatch
         {
-            if (newIndex == 1)
+            [HarmonyPrefix]
+            public static void Prefix(ref int newIndex)
             {
-                newIndex = 3;
-            }
-            else if (newIndex == 2)
-            {
-                newIndex = 0;
+                if (newIndex == 1)
+                {
+                    newIndex = 3;
+                }
+                else if (newIndex == 2)
+                {
+                    newIndex = 0;
+                }
             }
         }
-    }
 
-    [HarmonyPatch(typeof(TitleScreen), nameof(TitleScreen.ConfirmMenuOption))]
-    public class TitleScreenConfirmPatch
-    {
-        [HarmonyPrefix]
-        public static bool Prefix(TitleScreen __instance)
+        /// <summary>
+        /// When interacting with the archipelago connection button, 
+        /// show Archipelago UI to connect to the multiworld or TP to the spawn point if already connected.
+        /// </summary>
+        [HarmonyPatch(typeof(TitleScreen), nameof(TitleScreen.ConfirmMenuOption))]
+        public class TitleScreenConfirmPatch
         {
-            if (__instance.currentState == TitleScreen.TitleScreenState.Menu && __instance.currentMenuIndex == 0)
+            [HarmonyPrefix]
+            public static bool Prefix(TitleScreen __instance)
             {
-                SoundManager.PlayConfirmAudio();
-
-                if (Plugin.AP != null && Plugin.AP.IsConnected)
+                if (__instance.currentState == TitleScreen.TitleScreenState.Menu && __instance.currentMenuIndex == 0)
                 {
-                    Plugin.StartAPRun();
-                }
-                else
-                {
-                    ArchipelagoUI.Instance?.Toggle();
+                    SoundManager.PlayConfirmAudio();
+
+                    if (Plugin.AP != null && Plugin.AP.IsConnected)
+                    {
+                        Plugin.StartAPRun();
+                    }
+                    else
+                    {
+                        ArchipelagoUI.Instance?.Toggle();
+                    }
+
+                    return false;
                 }
 
-                return false;
+                return true;
             }
-
-            return true;
         }
     }
 }

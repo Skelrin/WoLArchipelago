@@ -3,48 +3,54 @@ using HarmonyLib;
 
 namespace WoLArchipelago.Patches
 {
-    [HarmonyPatch(typeof(BossRushNpc), nameof(BossRushNpc.Start))]
-    public class BossRushNpcStartPatch
+    /// <summary>
+    /// Patches to deactivate boss rush logic which breaks level generation with biome keys and progression Locations.
+    /// </summary>
+    public static class BossRushPatches
     {
-        private static readonly AccessTools.FieldRef<RunModifier, Dictionary<string, RunMod>> RunModsRef =
-            AccessTools.FieldRefAccess<RunModifier, Dictionary<string, RunMod>>("runMods");
-
-        [HarmonyPostfix]
-        public static void Postfix(BossRushNpc __instance)
+        [HarmonyPatch(typeof(BossRushNpc), nameof(BossRushNpc.Start))]
+        public static class BossRushNpcStartPatch
         {
-            if (__instance == null) return;
+            private static readonly AccessTools.FieldRef<RunModifier, Dictionary<string, RunMod>> RunModsRef =
+                AccessTools.FieldRefAccess<RunModifier, Dictionary<string, RunMod>>("runMods");
 
-            if (__instance.bossRushTP != null) __instance.bossRushTP.SetActive(false);
-            if (__instance.bossRushTPDisabled != null) __instance.bossRushTPDisabled.SetActive(true);
-
-            if (RunModifier.Instance != null)
+            [HarmonyPostfix]
+            public static void Postfix(BossRushNpc __instance)
             {
-                var mods = RunModsRef(RunModifier.Instance);
-                if (mods != null && mods.ContainsKey("RushRunMod"))
+                if (__instance == null) return;
+
+                __instance.bossRushTP?.SetActive(false);
+                __instance.bossRushTPDisabled?.SetActive(true);
+
+                if (RunModifier.Instance != null)
                 {
-                    RunMod mod = mods["RushRunMod"];
-                    if (mod != null)
+                    var mods = RunModsRef(RunModifier.Instance);
+                    if (mods != null && mods.ContainsKey("RushRunMod"))
                     {
-                        mod.Deactivate();
+                        RunMod mod = mods["RushRunMod"];
+                        if (mod != null)
+                        {
+                            mod.Deactivate();
+                        }
+                        mods.Remove("RushRunMod");
                     }
-                    mods.Remove("RushRunMod");
                 }
             }
         }
-    }
 
-    [HarmonyPatch(typeof(BossRushNpc), nameof(BossRushNpc.HandleConditionalInteraction))]
-    public class BossRushNpcInteractionPatch
-    {
-        [HarmonyPrefix]
-        public static bool Prefix(BossRushNpc __instance, ref bool __result)
+        [HarmonyPatch(typeof(BossRushNpc), nameof(BossRushNpc.HandleConditionalInteraction))]
+        public static class BossRushNpcInteractionPatch
         {
-            GameUI.BroadcastNoticeMessage("Boss Rush deactivated in Archipelago mode !");
-            SoundManager.PlayAudio("MenuError");
+            [HarmonyPrefix]
+            public static bool Prefix(BossRushNpc __instance, ref bool __result)
+            {
+                GameUI.BroadcastNoticeMessage("Boss Rush deactivated in Archipelago mode !");
+                SoundManager.PlayAudio("MenuError");
 
-            __instance.playerLeavingDialog = true;
-            __result = true;
-            return false;
+                __instance.playerLeavingDialog = true;
+                __result = true;
+                return false;
+            }
         }
     }
 }

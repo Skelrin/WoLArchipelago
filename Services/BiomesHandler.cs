@@ -3,9 +3,12 @@ using System.Linq;
 
 namespace WoLArchipelago.Services
 {
-    public static class BiomesHandler
+    /// <summary>
+    /// Manages biome unlocking and shuffling based on biome keys unlocked.
+    /// </summary>
+    public class BiomesHandler
     {
-        private static readonly Dictionary<string, string> BiomeToItemNameMap = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> BiomeToItemNameMap = new()
         {
             { "Fire", "Fire Biome Key" },
             { "Ice", "Water Biome Key" },
@@ -19,31 +22,50 @@ namespace WoLArchipelago.Services
             kvp => APItemLocationDatabase.GetItemId(kvp.Value)
         );
 
-        public static readonly List<string> AllBiomes = BiomeKeyMap.Keys.ToList();
+        public static readonly List<string> AllBiomes = [.. BiomeKeyMap.Keys];
 
-        private static int lastOrganizedTier = -1;
+        private static int _lastOrganizedTier = -1;
 
-        public static List<string> GetUnlockedBiomes() => [.. BiomeKeyMap.Where(kvp => ItemHandler.IsItemUnlocked(kvp.Value)).Select(kvp => kvp.Key)];
+        public static List<string> GetUnlockedBiomes()
+        {
+            List<string> unlocked = [];
+            foreach (KeyValuePair<string, long> kvp in BiomeKeyMap)
+            {
+                if (ItemHandler.IsItemUnlocked(kvp.Value))
+                {
+                    unlocked.Add(kvp.Key);
+                }
+            }
+            return unlocked;
+        }
 
-        public static void ResetRun() => lastOrganizedTier = -1;
+        public static void ResetRun()
+        {
+            _lastOrganizedTier = -1;
+        }
 
+        /// <summary>
+        /// Generates and assigns a randomized biome progression order for the current run based on unlocked keys.
+        /// </summary>
         public static void OrganizeLevelList()
         {
             int currentTier = GameController.tierCount;
 
-            if (currentTier < 0 || currentTier >= GameController.maxBaseTierCount || lastOrganizedTier != -1)
+            if (currentTier < 0 || currentTier >= GameController.maxBaseTierCount || _lastOrganizedTier != -1)
             {
                 return;
             }
 
             List<string> unlockedBiomes = GetUnlockedBiomes();
-
-            if (unlockedBiomes.Count == 0) unlockedBiomes = [.. AllBiomes];
+            if (unlockedBiomes.Count == 0)
+            {
+                unlockedBiomes = [.. AllBiomes];
+            }
 
             List<string> fullList = GenerateRunBiomes(unlockedBiomes);
             GameController.levelNameList = fullList;
 
-            lastOrganizedTier = currentTier;
+            _lastOrganizedTier = currentTier;
 
             if (GameController.loadingScreen != null && GameController.loadingScreen.gameProgressBoard != null)
             {
@@ -53,7 +75,7 @@ namespace WoLArchipelago.Services
 
         private static List<string> GenerateRunBiomes(List<string> unlockedBiomes)
         {
-            List<string> selectedBiomes = new List<string>();
+            List<string> selectedBiomes = [];
 
             for (int slot = 0; slot < GameController.maxBaseTierCount; slot++)
             {
@@ -73,10 +95,18 @@ namespace WoLArchipelago.Services
             return selectedBiomes;
         }
 
-        // Prioritizes unvisited unlocked biomes before allowing duplicate selections
+        // Prioritizes unvisited unlocked biomes before allowing duplicate selections in a same dungeon run
         private static List<string> GetCandidates(List<string> unlockedBiomes, List<string> alreadySelected)
         {
-            List<string> unused = unlockedBiomes.Where(b => !alreadySelected.Contains(b)).ToList();
+            List<string> unused = [];
+            for (int i = 0; i < unlockedBiomes.Count; i++)
+            {
+                string biome = unlockedBiomes[i];
+                if (!alreadySelected.Contains(biome))
+                {
+                    unused.Add(biome);
+                }
+            }
 
             return unused.Count > 0 ? unused : [.. unlockedBiomes];
         }

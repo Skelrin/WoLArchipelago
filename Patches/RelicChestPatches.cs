@@ -4,6 +4,9 @@ using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patch to handle assigning multiple relics to the player on the plaza based on its relic slot upgrade.
+    /// </summary>
     [HarmonyPatch(typeof(RelicChestUI), "AssignPlayerItem")]
     public class RelicChestUIAssignPlayerItemPatch
     {

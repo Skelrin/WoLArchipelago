@@ -1,5 +1,8 @@
 namespace WoLArchipelago.Services
 {
+    /// <summary>
+    /// Provides helper methods for verifying and sending location checks to Archipelago multiworld.
+    /// </summary>
     public class CheckHandler
     {
         public static void SendNpcCheck(string locNameFormat, int maxSlots)

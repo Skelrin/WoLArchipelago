@@ -7,12 +7,17 @@ using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patches restricting skill slot access, UI rendering, player input, arcana pickups, and skill swaps based on unlocked Archipelago skill slots.
+    /// </summary>
     public static class SkillSlotsPatches
     {
+        /// <summary>
+        /// Hides locked skill slots in the HUD cooldown interface to prevent deactivated skills from reappearing when the UI refreshes.
+        /// </summary>
         [HarmonyPatch(typeof(CooldownUI), nameof(CooldownUI.RefreshEntries))]
         public static class CooldownUIRefreshEntriesPatch
         {
-            // Deactivate LowerHUD locked skills and prevent deactivated skill reappear if the game refresh its UI.
             public static void Postfix(CooldownUI __instance)
             {
                 for (int i = 0; i < 6; i++)
@@ -26,10 +31,12 @@ namespace WoLArchipelago.Patches
             }
         }
 
+        /// <summary>
+        /// Deactivates UI elements for locked skill slots in the inventory equipment menu and redirects focus to the first unlocked slot.
+        /// </summary>
         [HarmonyPatch(typeof(EquipMenu), nameof(EquipMenu.LoadEquipMenu))]
         public static class EquipMenuLoadEquipMenuPatch
         {
-            // In the inventory deactivate skills UI not unlocked
             public static void Postfix(EquipMenu __instance, ref int ___navigationIndex)
             {
                 Transform equipBar = __instance.transform.Find("EquipBar");
@@ -61,7 +68,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
-        // Prevent navigating on hidden locked skills
+        /// <summary>
+        /// Prevents keyboard/gamepad navigation from selecting locked skill slots in the inventory menu.
+        /// </summary>
         [HarmonyPatch(typeof(EquipMenu), "ChangeHorizontalIndex")]
         public static class EquipMenuChangeHorizontalIndexPatch
         {
@@ -82,7 +91,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
-        // Prevent selecting a locked skill slot for swapping skills
+        /// <summary>
+        /// Redirects slot selection to the last unlocked slot if a player attempts to select a locked slot for skill swapping.
+        /// </summary>
         [HarmonyPatch(typeof(EquipMenu), nameof(EquipMenu.SelectSlot))]
         public static class EquipMenuSelectSlotPatch
         {
@@ -95,7 +106,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
-        // Rewriting HandleQuickSwap to prevent quickswapping stockSkill with a locked slot
+        /// <summary>
+        /// Overrides quick-swapping logic to prevent swapping the stocked skill into a locked skill slot.
+        /// </summary>
         [HarmonyPatch(typeof(EquipMenu), "HandleQuickSwap")]
         public static class EquipMenuHandleQuickSwapPatch
         {
@@ -163,6 +176,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
+        /// <summary>
+        /// Blocks click interactions on locked skill slots in the equipment menu.
+        /// </summary>
         [HarmonyPatch(typeof(EquipMenu), nameof(EquipMenu.SkillClicked))]
         public static class EquipMenuSkillClickedPatch
         {
@@ -172,6 +188,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
+        /// <summary>
+        /// Blocks hover visual effects on locked skill slots in the equipment menu.
+        /// </summary>
         [HarmonyPatch(typeof(EquipMenu), nameof(EquipMenu.SkillHovered))]
         public static class EquipMenuSkillHoveredPatch
         {
@@ -181,7 +200,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
-        // Prevent using a skill slot that is locked in-game
+        /// <summary>
+        /// Blocks input commands associated with locked skill slots at the input device level.
+        /// </summary>
         [HarmonyPatch(typeof(ChaosInputDevice))]
         public static class ChaosInputDeviceBlockLockedSlotsPatch
         {
@@ -235,13 +256,17 @@ namespace WoLArchipelago.Patches
             }
         }
 
-        // Rewriting PickupSkill logic to manage locked skill slot :
-        // if player has activated element_licenses_mode, we first check if it has the license of the skill
-        // if it's a basic or dash skill it replaces the current one and drop it (as intended)
-        // if it's a signature skill and its skill slot is unlocked it replaces the current one else it goes to the stockSkill slot
-        // if it's a standard skill it searches the first standard slot unlocked and empty, if there isn't it places it in the stockskill
-        // if the stockskill is full, the new standard skill replace the first unlocked standard skill slot and drop the current one, 
-        // if it cannot it replaces the stockskill and drop the current stock skill
+        /// <summary>
+        /// Handles skill pickup logic while accounting for elemental licenses and slot lock states.
+        /// </summary>
+        /// <remarks>
+        /// Workflow:
+        /// 1. Verifies if the player has the required elemental license (if enabled).
+        /// 2. Directly replaces basic and dash skills (dropping the old skill) if player pick up a basic or dash skill.
+        /// 3. Places signature skills in slot 3 if unlocked; otherwise routes to the stock skill slot.
+        /// 4. Assigns standard skills to the first empty unlocked standard slot (2, 4, 5) or routes to stock skill.
+        /// 5. Replaces existing standard or stock skills if capacity is exceeded and drop old skill.
+        /// </remarks>
         [HarmonyPatch(typeof(Player), nameof(Player.PickUpSkill))]
         public static class PlayerPickUpSkillPatch
         {
@@ -397,8 +422,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
-        // To prevent NPCs taking a skill from a locked skill slot, 
-        // we intercept GetRandomStandardSkill to only return a random unlocked skill slot not empty
+        /// <summary>
+        /// Intercepts random standard skill selection (for NPC skill steal logic) to return only pickable unlocked skill slots.
+        /// </summary>
         [HarmonyPatch(typeof(Player), nameof(Player.GetRandomStandardSkill))]
         public static class PlayerGetRandomStandardSkillPatch
         {

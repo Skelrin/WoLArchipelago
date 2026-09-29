@@ -2,7 +2,10 @@ using System.Collections.Generic;
 
 namespace WoLArchipelago.Services
 {
-    public static class SlotManager
+    /// <summary>
+    /// Manages arcana slot unlocks and elemental license restrictions.
+    /// </summary>
+    public class SlotManager
     {
         public static readonly int[] SlotItemIds =
         [
@@ -14,7 +17,7 @@ namespace WoLArchipelago.Services
             871122004   // Slot 5 (Bonus Arcana Slot 2)
         ];
 
-        public static readonly Dictionary<ElementType, int> LicenseItemIds = new Dictionary<ElementType, int>
+        public static readonly Dictionary<ElementType, int> LicenseItemIds = new()
         {
             [ElementType.Fire] = 871122010,
             [ElementType.Water] = 871122011,

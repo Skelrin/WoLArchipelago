@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patches for managing loading screen during level transitions to be aligned with the shuffled list.
+    /// </summary>
     public static class LoadingScreenPatches
     {
         private static readonly List<GameObject> createdUIBiomesClones = [];
@@ -13,6 +16,7 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(typeof(Portal), "OnTriggerEnter2D")]
         public static class PortalTriggerPatch
         {
+            // When going through a portal, it briefly shows the loading screen, so we clean the potential clones to not show them
             [HarmonyPrefix]
             public static void Prefix(Collider2D col)
             {
@@ -146,13 +150,13 @@ namespace WoLArchipelago.Patches
                         {
                             ___dimmersInOrder[i + num3] = dimmers[num2];
                             ___stagesInOrder[i + num3] = markers[num2];
-                            if (dimmers[num2] != null) dimmers[num2].gameObject.SetActive(true);
-                            if (markers[num2] != null) markers[num2].gameObject.SetActive(true);
+                            dimmers[num2]?.gameObject.SetActive(true);
+                            markers[num2]?.gameObject.SetActive(true);
                         }
                         else
                         {
-                            if (dimmers[num2] != null) dimmers[num2].gameObject.SetActive(false);
-                            if (markers[num2] != null) markers[num2].gameObject.SetActive(false);
+                            dimmers[num2]?.gameObject.SetActive(false);
+                            markers[num2]?.gameObject.SetActive(false);
                         }
                         num2--;
                         num3--;

@@ -3,50 +3,56 @@ using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
-    [HarmonyPatch(typeof(TreasureChest), nameof(TreasureChest.Break))]
-    public static class TreasureChestBreakPatch
+    /// <summary>
+    /// Patches tracking trasure chests openings to send the associated Archipelago Locations.
+    /// </summary>
+    public static class TreasureChestPatches
     {
-        public static bool IsOpeningBossChest { get; private set; }
-
-        [HarmonyPrefix]
-        public static void Prefix(TreasureChest __instance)
+        [HarmonyPatch(typeof(TreasureChest), nameof(TreasureChest.Break))]
+        public static class TreasureChestBreakPatch
         {
-            if (__instance == null) return;
+            public static bool IsOpeningBossChest { get; private set; }
 
-            if (__instance.chestType == TreasureChestType.Boss)
+            [HarmonyPrefix]
+            public static void Prefix(TreasureChest __instance)
             {
-                IsOpeningBossChest = true;
+                if (__instance == null) return;
+
+                if (__instance.chestType == TreasureChestType.Boss)
+                {
+                    IsOpeningBossChest = true;
+                }
+
+                if (!__instance.opened && !__instance.destroyed && __instance.dropLoot)
+                {
+                    string chestTypeName = __instance.chestType.ToString();
+
+                    if (!chestTypeName.Contains("Boss") && !chestTypeName.Contains("MiniBoss"))
+                    {
+                        chestTypeName = Level.element.ToString();
+                    }
+
+                    int currentCount = DataManager.IncrementChestCount(chestTypeName);
+                    if (currentCount > 0)
+                    {
+                        CheckHandler.CheckLocation($"{chestTypeName} Chest Slot {currentCount}");
+                        CheckHandler.CheckLocation($"Open {DataManager.TotalChestsOpened} Total Chests");
+                    }
+                }
             }
 
-            if (!__instance.opened && !__instance.destroyed && __instance.dropLoot)
+            [HarmonyPostfix]
+            public static void Postfix()
             {
-                string chestTypeName = __instance.chestType.ToString();
-
-                if (!chestTypeName.Contains("Boss") && !chestTypeName.Contains("MiniBoss") && !chestTypeName.Contains("Party"))
-                {
-                    chestTypeName = Level.element.ToString();
-                }
-
-                int currentCount = DataManager.IncrementChestCount(chestTypeName);
-                if (currentCount > 0)
-                {
-                    CheckHandler.CheckLocation($"{chestTypeName} Chest Slot {currentCount}");
-                    CheckHandler.CheckLocation($"Open {DataManager.TotalChestsOpened} Total Chests");
-                }
+                IsOpeningBossChest = false;
             }
         }
 
-        [HarmonyPostfix]
-        public static void Postfix()
+        [HarmonyPatch(typeof(LootManager), nameof(LootManager.DropSkill))]
+        public static class LootManagerDropSkillPatch
         {
-            IsOpeningBossChest = false;
+            [HarmonyPrefix]
+            public static bool Prefix() => !TreasureChestBreakPatch.IsOpeningBossChest;
         }
-    }
-
-    [HarmonyPatch(typeof(LootManager), nameof(LootManager.DropSkill))]
-    public static class LootManagerDropSkillPatch
-    {
-        [HarmonyPrefix]
-        public static bool Prefix() => !TreasureChestBreakPatch.IsOpeningBossChest;
     }
 }

@@ -4,68 +4,74 @@ using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
-    [HarmonyPatch(typeof(Inventory), "DropItem")]
-    public class InventoryDropItemPatch
+    /// <summary>
+    /// Patches to handle manipulating relics on the Plaza to let player drop them or load a set of relics previously equipped.
+    /// </summary>
+    public static class InventoryPatches
     {
-        [HarmonyPrefix]
-        public static bool Prefix(Inventory __instance, string givenItemID, ref bool __result)
+        [HarmonyPatch(typeof(Inventory), "DropItem")]
+        public class InventoryDropItemPatch
         {
-            string loadedLevelName = GameController.currentLevelName;
-            
-            if (loadedLevelName == "PlayerRoom" || loadedLevelName == "Hub")
+            [HarmonyPrefix]
+            public static bool Prefix(Inventory __instance, string givenItemID, ref bool __result)
             {
-                string idToRemove = givenItemID;
+                string loadedLevelName = GameController.currentLevelName;
                 
-                if (string.IsNullOrEmpty(idToRemove))
+                if (loadedLevelName == "PlayerRoom" || loadedLevelName == "Hub")
                 {
-                    idToRemove = __instance.GetItemIDList().FirstOrDefault();
-                }
-
-                if (!string.IsNullOrEmpty(idToRemove) && __instance.RemoveItem(idToRemove, forceOverride: true))
-                {
-                    Entity parentEntity = Traverse.Create(__instance).Field("parentEntity").GetValue<Entity>();
-                    Player p = parentEntity as Player;
-
-                    if (p != null)
+                    string idToRemove = givenItemID;
+                    
+                    if (string.IsNullOrEmpty(idToRemove))
                     {
-                        if (p.designatedItemID == idToRemove)
-                        {
-                            string nextRelic = __instance.GetItemIDList().FirstOrDefault(id => id != idToRemove);
-                            p.designatedItemID = nextRelic ?? string.Empty;
-                        }
+                        idToRemove = __instance.GetItemIDList().FirstOrDefault();
                     }
 
-                    DataManager.SavedHubRelics.Remove(idToRemove);
-                    DataManager.SaveData();
+                    if (!string.IsNullOrEmpty(idToRemove) && __instance.RemoveItem(idToRemove, forceOverride: true))
+                    {
+                        Entity parentEntity = Traverse.Create(__instance).Field("parentEntity").GetValue<Entity>();
+                        Player p = parentEntity as Player;
 
-                    __result = true;
-                }
-                else
-                {
-                    __result = false;
+                        if (p != null)
+                        {
+                            if (p.designatedItemID == idToRemove)
+                            {
+                                string nextRelic = __instance.GetItemIDList().FirstOrDefault(id => id != idToRemove);
+                                p.designatedItemID = nextRelic ?? string.Empty;
+                            }
+                        }
+
+                        DataManager.SavedHubRelics.Remove(idToRemove);
+                        DataManager.SaveData();
+
+                        __result = true;
+                    }
+                    else
+                    {
+                        __result = false;
+                    }
+                    
+                    return false;
                 }
                 
-                return false;
+                return true;
             }
-            
-            return true;
         }
-    }
 
-    [HarmonyPatch(typeof(Player), "GiveDesignatedItem")]
-    public class PlayerGiveDesignatedItemPatch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(Player __instance)
+        [HarmonyPatch(typeof(Player), "GiveDesignatedItem")]
+        public class PlayerGiveDesignatedItemPatch
         {
-            string loadedLevelName = GameController.currentLevelName;
-            if (loadedLevelName == "PlayerRoom" || loadedLevelName == "Hub")
+            [HarmonyPostfix]
+            public static void Postfix(Player __instance)
             {
-                foreach (string relicId in DataManager.SavedHubRelics)
+                string loadedLevelName = GameController.currentLevelName;
+                if (loadedLevelName == "PlayerRoom" || loadedLevelName == "Hub")
                 {
-                    if (relicId != __instance.designatedItemID && !__instance.inventory.ContainsItem(relicId))
+                    foreach (string relicId in DataManager.SavedHubRelics)
                     {
-                        __instance.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
+                        if (relicId != __instance.designatedItemID && !__instance.inventory.ContainsItem(relicId))
+                        {
+                            __instance.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
+                        }
                     }
                 }
             }

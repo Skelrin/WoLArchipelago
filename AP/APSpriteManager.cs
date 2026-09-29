@@ -4,43 +4,66 @@ using UnityEngine;
 
 namespace WoLArchipelago
 {
+    /// <summary>
+    /// Sprite manager responsible for loading and caching custom embedded sprite resources.
+    /// </summary>
     public static class APSpriteManager
     {
-        private static Sprite apSprite;
+        private const string ApSpriteResourcePath = "WoLArchipelago.UI.Sprites.AP.png";
+
+        private const float PixelsPerUnit = 230f;
+        private static readonly Vector2 DefaultPivot = new Vector2(0.5f, 0.5f);
+
+        private static Sprite _apSprite;
 
         public static Sprite APSprite
         {
             get
             {
-                if (apSprite == null)
+                if (_apSprite == null)
                 {
-                    apSprite = LoadSpriteFromResource("WoLArchipelago.UI.Sprites.AP.png");
+                    _apSprite = LoadSpriteFromResource(ApSpriteResourcePath);
                 }
-                return apSprite;
+                return _apSprite;
             }
         }
 
+        /// <summary>
+        /// Reads an embedded PNG image resource from the assembly and converts it into a Unity Sprite
+        /// </summary>
         private static Sprite LoadSpriteFromResource(string resourceName)
         {
             Assembly assembly = Assembly.GetExecutingAssembly();
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+
+            using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    Plugin.Log.LogError($"[AP] Resource not found : {resourceName}");
-                    return null;
-                }
-
-                byte[] bytes = new byte[stream.Length];
-                stream.Read(bytes, 0, bytes.Length);
-
-                Texture2D tex = new Texture2D(2, 2);
-                if (tex.LoadImage(bytes))
-                {
-                    tex.filterMode = FilterMode.Point;
-                    return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 230f);
-                }
+                Plugin.Log.LogError(string.Format("[AP] Embedded resource not found: {0}", resourceName));
+                return null;
             }
+
+            byte[] bytes = new byte[stream.Length];
+            int bytesRead = stream.Read(bytes, 0, bytes.Length);
+
+            if (bytesRead == 0)
+            {
+                Plugin.Log.LogError(string.Format("[AP] Failed to read resource stream: {0}", resourceName));
+                return null;
+            }
+
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(bytes))
+            {
+                texture.filterMode = FilterMode.Point;
+                return Sprite.Create(
+                    texture,
+                    new Rect(0f, 0f, texture.width, texture.height),
+                    DefaultPivot,
+                    PixelsPerUnit
+                );
+            }
+
+            Plugin.Log.LogError(string.Format("[AP] Failed to decode image data into Texture2D for resource: {0}", resourceName));
 
             return null;
         }

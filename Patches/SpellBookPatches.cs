@@ -4,33 +4,44 @@ using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patches for the SpellBook UI to manage locked skill slots, navigation skipping, and spell assignment validation.
+    /// </summary>
     public static class SpellBookPatches
     {
-       [HarmonyPatch(typeof(SBPlayerPageUI), nameof(SBPlayerPageUI.SetHighlightedCard))]
+        /// <summary>
+        /// Prevent seeing the card slot if the corresponding skill slot is locked.
+        /// </summary>
+        [HarmonyPatch(typeof(SBPlayerPageUI), nameof(SBPlayerPageUI.SetHighlightedCard))]
         public static class SBPlayerPageUISetHighlightedCardPatch
         {
             public static void Postfix(SBPlayerPageUI __instance)
             {
                 for (int slotIndex = 2; slotIndex <= 3; slotIndex++)
                 {
-                    if (!SlotManager.IsSlotUnlocked(slotIndex))
+                    bool isUnlocked = SlotManager.IsSlotUnlocked(slotIndex);
+
+                    if (!isUnlocked)
                     {
-                        if (__instance.cardBGTransArray[slotIndex] != null) __instance.cardBGTransArray[slotIndex].gameObject.SetActive(false);
-                        if (__instance.spellIconArray[slotIndex] != null) __instance.spellIconArray[slotIndex].gameObject.SetActive(false);
-                        if (__instance.cardTextArray[slotIndex] != null) __instance.cardTextArray[slotIndex].gameObject.SetActive(false);
-                        if (__instance.newCardMarkerArray[slotIndex] != null) __instance.newCardMarkerArray[slotIndex].gameObject.SetActive(false);
-                        if (__instance.cardSelArray[slotIndex] != null) __instance.cardSelArray[slotIndex].SetActive(false);
+                        __instance.cardBGTransArray[slotIndex]?.gameObject.SetActive(false);
+                        __instance.spellIconArray[slotIndex]?.gameObject.SetActive(false);
+                        __instance.cardTextArray[slotIndex]?.gameObject.SetActive(false);
+                        __instance.newCardMarkerArray[slotIndex]?.gameObject.SetActive(false);
+                        __instance.cardSelArray[slotIndex]?.SetActive(false);
                     }
                     else
                     {
-                        if (__instance.cardBGTransArray[slotIndex] != null) __instance.cardBGTransArray[slotIndex].gameObject.SetActive(true);
-                        if (__instance.spellIconArray[slotIndex] != null) __instance.spellIconArray[slotIndex].gameObject.SetActive(true);
-                        if (__instance.cardTextArray[slotIndex] != null) __instance.cardTextArray[slotIndex].gameObject.SetActive(true);
+                        __instance.cardBGTransArray[slotIndex]?.gameObject.SetActive(true);
+                        __instance.spellIconArray[slotIndex]?.gameObject.SetActive(true);
+                        __instance.cardTextArray[slotIndex]?.gameObject.SetActive(true);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Overrides input navigation in the SpellBook UI to skip over locked skill card slots.
+        /// </summary>
         [HarmonyPatch(typeof(SpellBookUI), "HandlePlayerSelection")]
         public static class SpellBookUIHandlePlayerSelectionPatch
         {
@@ -52,23 +63,10 @@ namespace WoLArchipelago.Patches
                 var navTimer = traverse.Field("navTimer").GetValue<ChaosQuickStopwatch>();
                 var autoNavTimer = traverse.Field("autoNavTimer").GetValue<ChaosQuickStopwatch>();
 
-                if (navTimer.IsRunning || autoNavTimer.IsRunning) return false;
+                if (navTimer.IsRunning || autoNavTimer.IsRunning) 
+                    return false;
 
-                int nextIndex = currentPlayerIndex;
-
-                if (dir == InputDirection.Right || dir == InputDirection.Left)
-                {
-                    int step = (dir == InputDirection.Right) ? 1 : -1;
-                    nextIndex = GetNextUnlockedPlayerIndex(currentPlayerIndex, step);
-                }
-                else if (dir == InputDirection.Down && currentPlayerIndex <= 3)
-                {
-                    nextIndex = 4;
-                }
-                else if (dir == InputDirection.Up && currentPlayerIndex > 3)
-                {
-                    nextIndex = GetLastUnlockedCardIndex();
-                }
+                int nextIndex = CalculateNextPlayerIndex(currentPlayerIndex, dir);
 
                 if (nextIndex != currentPlayerIndex)
                 {
@@ -103,7 +101,7 @@ namespace WoLArchipelago.Patches
                         traverse.Field("playerInfoSelectedType").SetValue(selectedType);
 
                         var plTypeSkillDict = sbRefTraverse.Field("plTypeSkillDict").GetValue<Dictionary<SpellBookUI.SkillEquipType, Player.SkillState>>();
-                        traverse.Field("currentSkill").SetValue(plTypeSkillDict != null && plTypeSkillDict.ContainsKey(selectedType) ? plTypeSkillDict[selectedType] : null);
+                        traverse.Field("currentSkill").SetValue(plTypeSkillDict != null && plTypeSkillDict.TryGetValue(selectedType, out var skill) ? skill : null);
                     }
 
                     playerPage.SetHighlightedCard(nextIndex);
@@ -112,12 +110,34 @@ namespace WoLArchipelago.Patches
                 return false;
             }
 
+            private static int CalculateNextPlayerIndex(int currentIndex, InputDirection dir)
+            {
+                if (dir == InputDirection.Right || dir == InputDirection.Left)
+                {
+                    int step = (dir == InputDirection.Right) ? 1 : -1;
+                    return GetNextUnlockedPlayerIndex(currentIndex, step);
+                }
+                
+                if (dir == InputDirection.Down && currentIndex <= 3)
+                {
+                    return 4;
+                }
+                
+                if (dir == InputDirection.Up && currentIndex > 3)
+                {
+                    return GetLastUnlockedCardIndex();
+                }
+
+                return currentIndex;
+            }
+
             private static int GetNextUnlockedPlayerIndex(int currentIndex, int step)
             {
                 int next = currentIndex + step;
                 while (next == 2 || next == 3)
                 {
-                    if (SlotManager.IsSlotUnlocked(next)) break;
+                    if (SlotManager.IsSlotUnlocked(next)) 
+                        break;
                     next += step;
                 }
                 return (next < 0 || next > 4) ? currentIndex : next;
@@ -131,6 +151,9 @@ namespace WoLArchipelago.Patches
             }
         }
 
+        /// <summary>
+        /// Prevent assigning a skill if the player doesn't have the correct license or skill slot unlocked.
+        /// </summary>
         [HarmonyPatch(typeof(SpellBookUI), "AssignPlayerSkill")]
         public static class SpellBookUIAssignPlayerSkillPatch
         {
@@ -139,7 +162,8 @@ namespace WoLArchipelago.Patches
                 var traverse = Traverse.Create(__instance);
                 Player.SkillState currentSkill = traverse.Field("currentSkill").GetValue<Player.SkillState>();
                 
-                if (currentSkill == null) return true;
+                if (currentSkill == null) 
+                    return true;
 
                 if (!SlotManager.PlayerHasLicenseToPickupSkill(currentSkill))
                 {
@@ -148,26 +172,7 @@ namespace WoLArchipelago.Patches
                     return false;
                 }
 
-                int targetSlot = 0;
-                switch (givenFocus)
-                {
-                    case SpellBookUI.SBFocus.Player:
-                        var playerInfoSelectedType = traverse.Field("playerInfoSelectedType").GetValue<SpellBookUI.SkillEquipType>();
-                        var skillEquipSlots = traverse.Field("sbRef").Field("skillEquipSlots").GetValue<Dictionary<SpellBookUI.SkillEquipType, int>>();
-                        if (skillEquipSlots != null && skillEquipSlots.TryGetValue(playerInfoSelectedType, out int slot))
-                        {
-                            targetSlot = slot;
-                        }
-                        break;
-
-                    case SpellBookUI.SBFocus.Overdrive:
-                        targetSlot = 3;
-                        break;
-
-                    case SpellBookUI.SBFocus.Spell:
-                        targetSlot = (!currentSkill.isBasic) ? (currentSkill.isDash ? 1 : 2) : 0;
-                        break;
-                }
+                int targetSlot = DetermineTargetSlot(traverse, givenFocus, currentSkill);
 
                 if (targetSlot >= 2 && !SlotManager.IsSlotUnlocked(targetSlot))
                 {
@@ -177,6 +182,32 @@ namespace WoLArchipelago.Patches
                 }
 
                 return true;
+            }
+
+            private static int DetermineTargetSlot(Traverse traverse, SpellBookUI.SBFocus focus, Player.SkillState skill)
+            {
+                switch (focus)
+                {
+                    case SpellBookUI.SBFocus.Player:
+                        var selectedType = traverse.Field("playerInfoSelectedType").GetValue<SpellBookUI.SkillEquipType>();
+                        var skillEquipSlots = traverse.Field("sbRef").Field("skillEquipSlots").GetValue<Dictionary<SpellBookUI.SkillEquipType, int>>();
+                        if (skillEquipSlots != null && skillEquipSlots.TryGetValue(selectedType, out int slot))
+                        {
+                            return slot;
+                        }
+                        return 0;
+
+                    case SpellBookUI.SBFocus.Overdrive:
+                        return 3;
+
+                    case SpellBookUI.SBFocus.Spell:
+                        if (skill.isBasic) return 0;
+                        if (skill.isDash) return 1;
+                        return 2;
+
+                    default:
+                        return 0;
+                }
             }
         }
     }

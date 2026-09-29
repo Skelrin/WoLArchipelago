@@ -2,6 +2,9 @@ using HarmonyLib;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patch to detect when player successfully enhance its outfit from Savile the Tailor to send an Archipelago check.
+    /// </summary>
     [HarmonyPatch(typeof(TailorNpc))]
     public class TailorNpcPatches
     {

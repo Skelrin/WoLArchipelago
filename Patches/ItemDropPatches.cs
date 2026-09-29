@@ -4,96 +4,93 @@ using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
-    [HarmonyPatch(typeof(ItemDrop), "OnInteract")]
-    public class ItemDrop_OnInteract_Patch
+    /// <summary>
+    /// Patches for ItemDrop to handle picking up relic with relic slot upgrade logic.
+    /// </summary>
+    public static class ItemDropPatches
     {
-        [HarmonyPrefix]
-        public static bool Prefix(ItemDrop __instance, Player player)
+        /// <summary>
+        /// Intercepts manual interaction with item drops to handle item swapping when the inventory is full.
+        /// </summary>
+        [HarmonyPatch(typeof(ItemDrop), "OnInteract")]
+        public static class ItemDropOnInteractPatch
         {
-            if (player == null || player.inventory.ContainsItem(__instance.itemID))
+            [HarmonyPrefix]
+            public static bool Prefix(ItemDrop __instance, Player player)
             {
-                return true;
+                return TryMakeRoomForPickup(player, __instance, playAudioOnError: true);
             }
-
-            int maxAllowedRelics = 1 + ItemHandler.GetItemCountByName("Relic Slot Upgrade");
-
-            if (player.inventory.Count >= maxAllowedRelics)
-            {
-                string itemToDrop = null;
-
-                foreach (var kvp in player.inventory.itemDict)
-                {
-                    if (kvp.Value != null && !kvp.Value.isCursed)
-                    {
-                        itemToDrop = kvp.Key;
-                        break;
-                    }
-                }
-
-                if (itemToDrop != null)
-                {
-                    if (player.inventory.RemoveItem(itemToDrop))
-                    {
-                        LootManager.DropItem(player.transform.position, 1, itemToDrop, false, 0);
-                    }
-                }
-                else
-                {
-                    SoundManager.PlayErrorAudio();
-                    return false; 
-                }
-            }
-
-            return true;
         }
-    }
 
-    [HarmonyPatch(typeof(ItemDrop), "OnTriggerStay2D")]
-    public class ItemDrop_OnTriggerStay2D_Patch
-    {
-        [HarmonyPrefix]
-        public static bool Prefix(ItemDrop __instance, Collider2D col, bool ___noPickUpMode)
+        /// <summary>
+        /// Intercepts collision-based automatic item pickups to handle item swapping when the inventory is full.
+        /// </summary>
+        [HarmonyPatch(typeof(ItemDrop), "OnTriggerStay2D")]
+        public static class ItemDropOnTriggerStay2DPatch
         {
-            if (col.gameObject.tag != "Player" || ___noPickUpMode)
+            [HarmonyPrefix]
+            public static bool Prefix(ItemDrop __instance, Collider2D col, bool ___noPickUpMode)
             {
-                return true;
+                if (col == null || col.gameObject.tag != "Player" || ___noPickUpMode)
+                {
+                    return true;
+                }
+
+                Player player = col.transform.parent != null 
+                    ? col.transform.parent.GetComponent<Player>() 
+                    : null;
+
+                if (player == null || __instance.requireInteract)
+                {
+                    return true;
+                }
+
+                return TryMakeRoomForPickup(player, __instance, playAudioOnError: false);
             }
+        }
 
-            Player component = col.transform.parent.GetComponent<Player>();
-
-            if (component == null || component.inventory.ContainsItem(__instance.itemID) || __instance.requireInteract)
+        /// <summary>
+        /// Checks player inventory capacity against relic slot upgrade unlocked and drops a non-cursed relic to make room for a new item.
+        /// </summary>
+        private static bool TryMakeRoomForPickup(Player player, ItemDrop itemDrop, bool playAudioOnError)
+        {
+            if (player == null || itemDrop == null || player.inventory.ContainsItem(itemDrop.itemID))
             {
                 return true;
             }
 
             int maxAllowedRelics = 1 + ItemHandler.GetItemCountByName("Relic Slot Upgrade");
 
-            if (component.inventory.Count >= maxAllowedRelics)
+            if (player.inventory.Count < maxAllowedRelics)
             {
-                string itemToDrop = null;
-                foreach (var kvp in component.inventory.itemDict)
-                {
-                    if (kvp.Value != null && !kvp.Value.isCursed)
-                    {
-                        itemToDrop = kvp.Key;
-                        break;
-                    }
-                }
+                return true;
+            }
 
-                if (itemToDrop != null)
+            string itemToDrop = null;
+            foreach (var kvp in player.inventory.itemDict)
+            {
+                if (kvp.Value != null && !kvp.Value.isCursed)
                 {
-                    if (component.inventory.RemoveItem(itemToDrop))
-                    {
-                        LootManager.DropItem(component.transform.position, 1, itemToDrop, false, 0);
-                    }
-                }
-                else
-                {
-                    return false; 
+                    itemToDrop = kvp.Key;
+                    break;
                 }
             }
 
-            return true;
+            if (itemToDrop != null)
+            {
+                if (player.inventory.RemoveItem(itemToDrop))
+                {
+                    LootManager.DropItem(player.transform.position, 1, itemToDrop, false, 0);
+                }
+                return true;
+            }
+
+            if (playAudioOnError)
+            {
+                SoundManager.PlayErrorAudio();
+            }
+
+            return false;
         }
     }
 }

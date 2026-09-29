@@ -5,9 +5,12 @@ using Object = UnityEngine.Object;
 
 namespace WoLArchipelago.Services
 {
+    /// <summary>
+    /// Core service handling Archipelago logic for in-game shops, including location assignment, visuals, and transactions.
+    /// </summary>
     public class ShopService
     {
-        private static readonly HashSet<long> assignedLocationsInScene = new HashSet<long>();
+        private static readonly HashSet<long> assignedLocationsInScene = [];
 
         public static void ClearSceneAssignments()
         {
@@ -19,6 +22,9 @@ namespace WoLArchipelago.Services
             return Mathf.Min(ItemHandler.GetTotalShopUpgrade() * 16, 64);
         }
 
+        /// <summary>
+        /// Iterates through shop slots to find the next available, unchecked Archipelago location.
+        /// </summary>
         public static bool TryGetNextLocation(string slotNameFormat, int maxSlots, out long locId, out string locName)
         {
             locId = -1;
@@ -58,6 +64,30 @@ namespace WoLArchipelago.Services
             }
         }
 
+        /// <summary>
+        /// Configure an in-game shop item to represent an Archipelago location.
+        /// </summary>
+        public static void SetupAPShopItem(
+            GameObject gameObject,
+            string locationName,
+            long locationId,
+            SpriteRenderer itemSpriteRenderer,
+            Action<string, string> setTextAction)
+        {
+            gameObject.AddComponent<APShopSlot>().Initialize(locationName);
+
+            if (itemSpriteRenderer != null)
+            {
+                itemSpriteRenderer.sprite = APSpriteManager.APSprite;
+            }
+
+            var locationInfo = Plugin.AP.GetLocationInfo(locationId);
+            setTextAction?.Invoke(locationInfo.First, locationInfo.Second);
+        }
+
+        /// <summary>
+        /// Handles the validation and transaction logic when a player attempts to buy an Archipelago item.
+        /// </summary>
         public static bool ProcessPurchase(
             GameObject gameObject,
             Component priceMarker,
@@ -81,7 +111,6 @@ namespace WoLArchipelago.Services
                     Player.goldWallet.Withdraw(cost);
 
                 Plugin.AP.SendLocationCheck(apSlot.LocationId);
-
                 SoundManager.PlayAudio("MenuBuy");
 
                 onSuccess?.Invoke();

@@ -1,13 +1,15 @@
 using HarmonyLib;
 using UnityEngine;
+using WoLArchipelago.Services;
 
 namespace WoLArchipelago.Patches
 {
+    /// <summary>
+    /// Patches for ItemStoreItem that convert standard relic and cursed shop items with Archipelago location checks
+    /// </summary>
     [HarmonyPatch(typeof(ItemStoreItem))]
     public class ItemStoreItemPatches
     {
-        public static void ClearSceneAssignments() => Services.ShopService.ClearSceneAssignments();
-
         [HarmonyPostfix]
         [HarmonyPatch(nameof(ItemStoreItem.Start))]
         public static void StartPostfix(ItemStoreItem __instance)
@@ -23,40 +25,41 @@ namespace WoLArchipelago.Patches
             else
             {
                 slotFormat = "Relic Shop Slot {0}";
-                maxSlots = Services.ShopService.GetMaxShopSlots();
+                maxSlots = ShopService.GetMaxShopSlots();
             }
 
-            if (!Services.ShopService.TryGetNextLocation(slotFormat, maxSlots, out long locId, out string locName))
+            if (!ShopService.TryGetNextLocation(slotFormat, maxSlots, out long locId, out string locName))
             {
-                Services.ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
+                ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
                 return;
             }
 
+            // On Plaza, setup arbitrary price of 20 Chaos gems
             if (__instance.usePlatinumCost)
             {
                 __instance.costStat?.Initialize(20);
             }
 
-            if (__instance.priceMarker != null)
-                __instance.priceMarker.SetText(__instance.Cost.ToString());
+            __instance.priceMarker?.SetText(__instance.Cost.ToString());
 
-            __instance.gameObject.AddComponent<APShopSlot>().Initialize(locName);
-
-            if (__instance.itemSpriteRenderer != null)
-                __instance.itemSpriteRenderer.sprite = APSpriteManager.APSprite;
-
-            if (__instance.itemText != null)
-                __instance.itemText.text = Plugin.AP.GetLocationInfo(locId).First;
-
-            if (__instance.descText != null)
-                __instance.descText.text = Plugin.AP.GetLocationInfo(locId).Second;
+            ShopService.SetupAPShopItem(
+                __instance.gameObject,
+                locName,
+                locId,
+                __instance.itemSpriteRenderer,
+                (title, desc) =>
+                {
+                    if (__instance.itemText != null) __instance.itemText.text = title;
+                    if (__instance.descText != null) __instance.descText.text = desc;
+                }
+            );
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(nameof(ItemStoreItem.Buy))]
         public static bool BuyPrefix(ItemStoreItem __instance, Player player)
         {
-            return Services.ShopService.ProcessPurchase(
+            return ShopService.ProcessPurchase(
                 __instance.gameObject,
                 __instance.priceMarker,
                 __instance.Cost,
@@ -65,9 +68,10 @@ namespace WoLArchipelago.Patches
                 {
                     __instance.parentNpc?.PlayDefaultEmote();
 
+                    // When acquiring Nox's Archipelago Locations, the player get a health malus to balance the gratuity of the Location
                     if (__instance.cursedOnly)
                     {
-                        Player targetPlayer = player ?? Services.ItemHandler.GetActivePlayer();
+                        Player targetPlayer = player ?? ItemHandler.GetActivePlayer();
                         if (targetPlayer?.health != null)
                         {
                             targetPlayer.health.CurrentHealthValue = Mathf.Max(1, targetPlayer.health.CurrentHealthValue - 50);

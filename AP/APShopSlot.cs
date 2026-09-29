@@ -2,6 +2,9 @@ using UnityEngine;
 
 namespace WoLArchipelago
 {
+    /// <summary>
+    /// Represent an Archipelago location.
+    /// </summary>
     public class APShopSlot : MonoBehaviour
     {
         public string LocationName { get; private set; }
