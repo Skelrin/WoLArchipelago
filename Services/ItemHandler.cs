@@ -7,12 +7,20 @@ using UnityEngine;
 
 namespace WoLArchipelago.Services
 {
-    public class ItemHandler
+    /// <summary>
+    /// Handles receiving items from Archipelago multiworld and applying them in-game.
+    /// </summary>
+    public static class ItemHandler
     {
-        public static List<ItemInfo> CachedItems { get; set; } = new List<ItemInfo>();
+        public static List<ItemInfo> CachedItems { get; set; }
 
         private static List<string> _cachedCursedItemIDs;
         private static string[] _cachedEnemyNames;
+
+        static ItemHandler()
+        {
+            CachedItems = [];
+        }
 
         private static List<string> CursedItemIDs
         {
@@ -20,10 +28,10 @@ namespace WoLArchipelago.Services
             {
                 if (_cachedCursedItemIDs == null || _cachedCursedItemIDs.Count == 0)
                 {
-                    _cachedCursedItemIDs = new List<string>();
+                    _cachedCursedItemIDs = [];
                     if (LootManager.completeItemDict != null)
                     {
-                        foreach (var kvp in LootManager.completeItemDict)
+                        foreach (KeyValuePair<string, Item> kvp in LootManager.completeItemDict)
                         {
                             if (kvp.Value != null && kvp.Value.isCursed)
                             {
@@ -48,14 +56,14 @@ namespace WoLArchipelago.Services
             }
         }
 
-        public static Player GetActivePlayer(bool mustBeAlive = false)
+        public static Player GetActivePlayer(bool mustBeAlive)
         {
             var players = GameController.activePlayers;
             if (players == null) return null;
 
             for (int i = 0; i < players.Count(); i++)
             {
-                var p = players[i];
+                Player p = players[i];
                 if (p == null) continue;
                 if (mustBeAlive && p.fsm != null && p.fsm.currentStateName.Contains("Dead")) continue;
                 return p;
@@ -63,16 +71,28 @@ namespace WoLArchipelago.Services
             return null;
         }
 
+        public static Player GetActivePlayer()
+        {
+            return GetActivePlayer(false);
+        }
+
         public static bool IsItemUnlocked(long itemId)
         {
-            return CachedItems != null && CachedItems.Exists(item => item.ItemId == itemId);
+            if (CachedItems == null) return false;
+
+            for (int i = 0; i < CachedItems.Count; i++)
+            {
+                if (CachedItems[i].ItemId == itemId) return true;
+            }
+            return false;
         }
 
         public static int GetItemCountByName(string name)
         {
+            if (CachedItems == null) return 0;
+
             int count = 0;
-            int total = CachedItems.Count;
-            for (int i = 0; i < total; i++)
+            for (int i = 0; i < CachedItems.Count; i++)
             {
                 if (APItemLocationDatabase.GetItemName(CachedItems[i].ItemId) == name)
                 {
@@ -82,9 +102,9 @@ namespace WoLArchipelago.Services
             return count;
         }
 
-        public static int GetTotalBossKeys() => GetItemCountByName("Boss Key");
-        public static int GetTotalChaosFragment() => GetItemCountByName("Chaos Fragment");
-        public static int GetTotalShopUpgrade() => GetItemCountByName("Shop Upgrade");
+        public static int GetTotalBossKeys() { return GetItemCountByName("Boss Key"); }
+        public static int GetTotalChaosFragment() { return GetItemCountByName("Chaos Fragment"); }
+        public static int GetTotalShopUpgrade() { return GetItemCountByName("Shop Upgrade"); }
 
         public static bool CanAccessBossStage(int tierCount, int stageCount)
         {
@@ -100,21 +120,24 @@ namespace WoLArchipelago.Services
             return GetTotalChaosFragment() >= APManager.ChaosFragmentsRequired;
         }
 
+        /// <summary>
+        /// Recalculates and applies Max HP stat modifiers based on received HP Boost items.
+        /// </summary>
         public static void SyncPlayerMaxHP(Player player, bool restoreAllHP)
         {
-            if (player?.health == null) return;
+            if (player == null || player.health == null) return;
 
             int hpBoostCount = GetItemCountByName("Max HP Boost");
             int totalBonusHP = hpBoostCount * 50;
 
-            NumVarStatMod hpMod = new NumVarStatMod("AP_MaxHP_Mod", totalBonusHP, fillToNewMax: restoreAllHP);
+            NumVarStatMod hpMod = new("AP_MaxHP_Mod", totalBonusHP, fillToNewMax: restoreAllHP);
             player.health.healthStat.AddMod(hpMod);
         }
 
         public static void ProcessHPBoostItem()
         {
             Player player = GetActivePlayer();
-            if (player?.health != null)
+            if (player != null && player.health != null)
             {
                 float maxHpBefore = player.health.healthStat.ModifiedValue;
 
@@ -139,32 +162,34 @@ namespace WoLArchipelago.Services
 
         private static IEnumerator CursedTrapCoroutine()
         {
-            if (GetActivePlayer(mustBeAlive: true) is not Player player || !GameController.inGameScene)
+            Player player = GetActivePlayer(true);
+            if (player == null || !GameController.inGameScene)
             {
                 yield break;
             }
 
-            GameUI.BroadcastNoticeMessage("You've been caught in a trap!",2f);
+            GameUI.BroadcastNoticeMessage("You've been caught in a trap!", 2f);
             SoundManager.PlayAudio("BuyCursedRelic");
             yield return new WaitForSeconds(2f);
 
             for (int i = 5; i > 0; i--)
             {
-                GameUI.BroadcastNoticeMessage($"Trap triggering in {i}...");
+                GameUI.BroadcastNoticeMessage(string.Format("Trap triggering in {0}...", i));
                 yield return new WaitForSeconds(1f);
 
-                if (GetActivePlayer(mustBeAlive: true) is null || !GameController.inGameScene)
+                if (GetActivePlayer(true) == null || !GameController.inGameScene)
                 {
                     yield break;
                 }
             }
 
-            player = GetActivePlayer(mustBeAlive: true);
+            player = GetActivePlayer(true);
             if (player == null) yield break;
 
+            // 50% chance to force-add a cursed relic or spawns an enemy wave on failure/full inventory
             if (UnityEngine.Random.value < 0.5f && !player.inventory.IsFull)
             {
-                var cursedPool = CursedItemIDs;
+                List<string> cursedPool = CursedItemIDs;
                 if (cursedPool.Count > 0)
                 {
                     string randomCursedID = cursedPool[UnityEngine.Random.Range(0, cursedPool.Count)];
@@ -184,7 +209,7 @@ namespace WoLArchipelago.Services
 
         private static void SpawnRandomEnemy(Vector3 position)
         {
-            var enemies = EnemyNames;
+            string[] enemies = EnemyNames;
             if (enemies.Length == 0) return;
 
             int mobCount = UnityEngine.Random.Range(3, 9);
@@ -202,13 +227,14 @@ namespace WoLArchipelago.Services
 
         private static void GenerateRandomRelic(int relicTier)
         {
-            if (!LootManager.itemTierDict.TryGetValue(relicTier - 1, out List<string> relicPool) || relicPool == null)
+            List<string> relicPool;
+            if (!LootManager.itemTierDict.TryGetValue(relicTier - 1, out relicPool) || relicPool == null)
             {
-                Plugin.Log.LogError($"[AP] No relics found for tier {relicTier}.");
+                Plugin.Log.LogError(string.Format("[AP] No relics found for tier {0}.", relicTier));
                 return;
             }
 
-            List<string> availableRelics = new List<string>();
+            List<string> availableRelics = [];
             for (int i = 0; i < relicPool.Count; i++)
             {
                 string relic = relicPool[i];
@@ -220,16 +246,17 @@ namespace WoLArchipelago.Services
 
             if (availableRelics.Count == 0)
             {
-                GameUI.BroadcastNoticeMessage($"All relics in tier {relicTier} are already unlocked!");
+                GameUI.BroadcastNoticeMessage(string.Format("All relics in tier {0} are already unlocked!", relicTier));
                 return;
             }
 
             string selectedRelic = availableRelics[UnityEngine.Random.Range(0, availableRelics.Count)];
 
             Item.IsUnlocked(selectedRelic, true);
-            GameUI.BroadcastNoticeMessage($"Unlocked {TextManager.GetItemName($"{selectedRelic}")} relic");
+            GameUI.BroadcastNoticeMessage(string.Format("Unlocked {0} relic", TextManager.GetItemName(selectedRelic)));
 
-            if (GetActivePlayer(mustBeAlive: true) is Player player && GameController.inGameScene)
+            Player player = GetActivePlayer(true);
+            if (player != null && GameController.inGameScene)
             {
                 LootManager.DropItem(player.transform.position, 1, selectedRelic, false, 0);
                 SoundManager.PlayAudio("DropItem");
@@ -238,7 +265,7 @@ namespace WoLArchipelago.Services
 
         private static bool IsSkillUnlocked(Player player, string skillName)
         {
-            if (player?.skillStates == null) return false;
+            if (player == null || player.skillStates == null) return false;
 
             for (int i = 0; i < player.skillStates.Length; i++)
             {
@@ -256,17 +283,17 @@ namespace WoLArchipelago.Services
 
         private static void GenerateRandomSkill(int skillTier)
         {
-            Player player = GetActivePlayer(mustBeAlive: true);
+            Player player = GetActivePlayer(true);
+            if (player == null) return;
 
-            if(player == null) return;
-
-            if (!LootManager.skillTierDict.TryGetValue(skillTier - 1, out List<string> arcanaPool) || arcanaPool == null)
+            List<string> arcanaPool;
+            if (!LootManager.skillTierDict.TryGetValue(skillTier - 1, out arcanaPool) || arcanaPool == null)
             {
-                Plugin.Log.LogError($"[AP] No arcana found for tier {skillTier}.");
+                Plugin.Log.LogError(string.Format("[AP] No arcana found for tier {0}.", skillTier));
                 return;
             }
 
-            List<string> availableArcanas = new List<string>();
+            List<string> availableArcanas = [];
             for (int i = 0; i < arcanaPool.Count; i++)
             {
                 string arcana = arcanaPool[i];
@@ -278,40 +305,43 @@ namespace WoLArchipelago.Services
 
             if (availableArcanas.Count == 0)
             {
-                GameUI.BroadcastNoticeMessage($"All arcanas in tier {skillTier} are already unlocked!");
+                GameUI.BroadcastNoticeMessage(string.Format("All arcanas in tier {0} are already unlocked!", skillTier));
                 return;
             }
 
             string selectedArcana = availableArcanas[UnityEngine.Random.Range(0, availableArcanas.Count)];
 
-            player.HandleSkillUnlock(selectedArcana,true);
+            player.HandleSkillUnlock(selectedArcana, true);
 
             if (GameController.inGameScene)
             {
                 ItemSpawner itemSpawner = GameController.itemSpawner ?? ItemSpawner.Instance;
                 if (itemSpawner != null)
                 {
-                    itemSpawner.SpawnItem(ItemSpawner.PoolType.SkillDrop, player.transform.position, randomizeSpawnLocation: true, 1.5f, selectedArcana);
+                    itemSpawner.SpawnItem(ItemSpawner.PoolType.SkillDrop, player.transform.position, true, 1.5f, selectedArcana);
                     SoundManager.PlayAudio("DropSpell");
                 }
             }
         }
 
+        /// <summary>
+        /// Main entry point for dispatching incoming items.
+        /// </summary>
         public static void GrantPlayerAPItem(long apItemId)
         {
             string itemName = APItemLocationDatabase.GetItemName(apItemId);
-            Plugin.Log.LogInfo($"[AP] Processing Item: {itemName} (ID: {apItemId})");
+            Plugin.Log.LogInfo(string.Format("[AP] Processing Item: {0} (ID: {1})", itemName, apItemId));
 
             switch (itemName)
             {
                 case "Boss Key":
-                    GameUI.BroadcastNoticeMessage($"[AP] Boss Key Received! ({GetTotalBossKeys()}/3)");
+                    GameUI.BroadcastNoticeMessage(string.Format("[AP] Boss Key Received! ({0}/3)", GetTotalBossKeys()));
                     return;
                 case "Chaos Fragment":
-                    GameUI.BroadcastNoticeMessage($"[AP] Chaos Fragment Received! ({GetTotalChaosFragment()}/{APManager.ChaosFragmentsRequired})");
+                    GameUI.BroadcastNoticeMessage(string.Format("[AP] Chaos Fragment Received! ({0}/{1})", GetTotalChaosFragment(), APManager.ChaosFragmentsRequired));
                     return;
                 case "Shop Upgrade":
-                    GameUI.BroadcastNoticeMessage($"[AP] Shop Upgrade Received! ({GetTotalShopUpgrade()}/3)");
+                    GameUI.BroadcastNoticeMessage(string.Format("[AP] Shop Upgrade Received! ({0}/4)", GetTotalShopUpgrade()));
                     return;
                 case "Chaos Gems Pack":
                     Player.platWallet?.Deposit(100);
@@ -335,7 +365,7 @@ namespace WoLArchipelago.Services
                 int colonIndex = itemName.IndexOf(':');
                 string outfit = colonIndex >= 0 ? itemName.Substring(colonIndex + 1).Trim() : itemName;
                 Outfit.UnlockOutfit(outfit);
-                GameUI.BroadcastNoticeMessage($"[AP] Unlocked {TextManager.GetOutfitName(outfit)} outfit");
+                GameUI.BroadcastNoticeMessage(string.Format("[AP] Unlocked {0} outfit", TextManager.GetOutfitName(outfit)));
             }
             else if (itemName.Contains("Relic") && TryExtractTier(itemName, out int relicTier))
             {
@@ -347,9 +377,10 @@ namespace WoLArchipelago.Services
             }
             else if (itemName.Contains("Doctor") || itemName.Contains("Heal"))
             {
-                GameUI.BroadcastNoticeMessage($"[AP] {TextManager.GetItemName(itemName)} Received");
+                GameUI.BroadcastNoticeMessage(string.Format("[AP] {0} Received", TextManager.GetItemName(itemName)));
                 Item.IsUnlocked(itemName, true);
-                if (GetActivePlayer() is Player player && GameController.inGameScene)
+                Player player = GetActivePlayer();
+                if (player != null && GameController.inGameScene)
                 {
                     LootManager.DropItem(player.transform.position, 1, itemName, false, 0);
                     SoundManager.PlayAudio("DropItem");
@@ -357,7 +388,7 @@ namespace WoLArchipelago.Services
             }
             else
             {
-                GameUI.BroadcastNoticeMessage($"[AP] {itemName} Received");
+                GameUI.BroadcastNoticeMessage(string.Format("[AP] {0} Received", itemName));
                 GameUI.RefreshCDUI();
             }
         }

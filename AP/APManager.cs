@@ -5,164 +5,211 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.Models;
+using WoLArchipelago.Services;
 
 namespace WoLArchipelago
 {
+    /// <summary>
+    /// Manages Archipelago connection lifecycle, item queueing, location checks, and offline synchronization.
+    /// </summary>
     public class APManager
     {
-        public ArchipelagoSession session { get; private set; }
-        private TlsProxyServer tlsProxy;
-        private string lastHost;
-        private int lastPort;
-        private string lastSlot;
-        private string lastPassword;
-        private readonly object lockObject = new object();
-        private readonly Services.StorageService storageService = new Services.StorageService();
-        private readonly HashSet<long> checkedLocations = new HashSet<long>();
-        public Dictionary<long, ScoutedItemInfo> ScoutedLocations { get; private set; } = new Dictionary<long, ScoutedItemInfo>();
-        private Queue<long> offlineCheckQueue = new Queue<long>();
-        private int itemsReceivedIndex = 0;
-        private readonly Queue<long> itemsToProcess = new Queue<long>();
-        public static string CurrentAPSavePrefix => Services.StorageService.CurrentAPSavePrefix;
+        private readonly object _lockObject = new();
+        private readonly StorageService _storageService = new();
+        private readonly HashSet<long> _checkedLocations = [];
+        private readonly Queue<long> _itemsToProcess = new();
+
+        private TlsProxyServer _tlsProxy;
+        private Queue<long> _offlineCheckQueue = new();
+        private int _itemsReceivedIndex;
+        private bool _pendingGoalCompletion;
+
+        // Saved parameters for auto-reconnection
+        private string _lastHost;
+        private int _lastPort;
+        private string _lastSlot;
+        private string _lastPassword;
+
+        // Session & Connection State
+        public ArchipelagoSession Session { get; private set; }
+        public Dictionary<long, ScoutedItemInfo> ScoutedLocations { get; private set; }
         public bool IsConnected { get; private set; }
-        public string StatusMessage { get; private set; } = "Disconnected";
+        public string StatusMessage { get; private set; }
+
+        // Game Settings from Slot Data
         public static int StartingArcanaMode { get; private set; }
         public static int ElementLicensesMode { get; private set; }
         public static int ChaosFragmentsRequired { get; private set; }
         public static string StartingElement { get; private set; }
-        private bool pendingGoalCompletion = false;
+
+        public static string CurrentAPSavePrefix
+        {
+            get { return StorageService.CurrentAPSavePrefix; }
+        }
 
         public APManager()
         {
-            Services.StorageService.InitProfile();
-            Services.ItemHandler.CachedItems.Clear();
-            offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
-            itemsReceivedIndex = storageService.LoadItemIndex();
-            pendingGoalCompletion = storageService.LoadGoalCompletion();
+            ScoutedLocations = [];
+            StatusMessage = "Disconnected";
+
+            StorageService.InitProfile();
+            ItemHandler.CachedItems.Clear();
+
+            _offlineCheckQueue = _storageService.LoadPendingChecks(_checkedLocations);
+            _itemsReceivedIndex = _storageService.LoadItemIndex();
+            _pendingGoalCompletion = DataManager.IsGoalCompleted;
         }
 
         public void Connect(string host, int port, string slotName, string password = null, bool isReconnecting = false)
         {
-            lastHost = host; lastPort = port; lastSlot = slotName; lastPassword = password;
+            _lastHost = host;
+            _lastPort = port;
+            _lastSlot = slotName;
+            _lastPassword = password;
 
             StatusMessage = "Connecting...";
 
-            ThreadPool.QueueUserWorkItem(_ =>
+            ThreadPool.QueueUserWorkItem(delegate
             {
                 try
                 {
                     DisconnectInternal();
 
-                    string connectUri;
+                    string connectUri = PrepareConnectUri(host, port);
+                    Session = ArchipelagoSessionFactory.CreateSession(connectUri);
 
-                    if (host.Contains("archipelago.gg") || host.StartsWith("wss://"))
-                    {
-                        string cleanHost = host.Replace("wss://", "").Replace("ws://", "");
-
-                        tlsProxy = new TlsProxyServer(cleanHost, port);
-                        tlsProxy.Start();
-
-                        connectUri = $"ws://127.0.0.1:{tlsProxy.LocalPort}";
-                    }
-                    else
-                    {
-                        connectUri = host.StartsWith("ws://") ? host : $"ws://{host}:{port}";
-                    }
-
-                    session = ArchipelagoSessionFactory.CreateSession(connectUri);
-                    LoginResult result = session.TryConnectAndLogin(
+                    LoginResult result = Session.TryConnectAndLogin(
                         "Wizard of Legend",
                         slotName,
                         ItemsHandlingFlags.AllItems,
                         password: password
                     );
 
+
                     if (result is LoginSuccessful loginSuccess)
                     {
-                        IsConnected = true;
-                        StatusMessage = "Online";
-
-                        storageService.SetAPSaveProfile(session.RoomState.Seed, slotName);
-
-                        ParseSlotData(loginSuccess.SlotData);
-
-                        Plugin.ExecuteOnMainThread(() =>
-                        {
-                            GameDataManager.Load();
-                            ArchipelagoUI.Instance?.ToggleHasConnectedOnce();
-                        });
-
-                        lock (lockObject)
-                        {
-                            checkedLocations.Clear();
-                            offlineCheckQueue.Clear();
-                            itemsToProcess.Clear();
-                            Services.ItemHandler.CachedItems.Clear();
-
-                            itemsReceivedIndex = storageService.LoadItemIndex();
-                            offlineCheckQueue = storageService.LoadPendingChecks(checkedLocations);
-
-                            Services.ItemHandler.CachedItems.AddRange(session.Items.AllItemsReceived);
-
-                            while (itemsReceivedIndex < session.Items.AllItemsReceived.Count)
-                            {
-                                ItemInfo item = session.Items.AllItemsReceived[itemsReceivedIndex];
-                                itemsToProcess.Enqueue(item.ItemId);
-                                itemsReceivedIndex++;
-                                storageService.SaveItemIndex(itemsReceivedIndex);
-                            }
-
-                            Services.DataManager.LoadData();
-                        }
-
-                        session.Locations.ScoutLocationsAsync(scoutedInfo =>
-                        {
-                            lock (lockObject)
-                            {
-                                ScoutedLocations = scoutedInfo;
-                            }
-                        }, new List<long>(session.Locations.AllLocations).ToArray());
-
-                        session.Items.ItemReceived += OnItemReceived;
-                        session.Socket.SocketClosed += OnSocketClosed;
-
-                        foreach (long locationId in session.Locations.AllLocationsChecked)
-                        {
-                            checkedLocations.Add(locationId);
-                        }
-
-                        if (!isReconnecting)
-                        {
-                            Plugin.StartAPRun();
-                        }
-
-                        FlushOfflineQueue();
+                        HandleSuccessfulLogin(loginSuccess, slotName, isReconnecting);
                     }
                     else if (result is LoginFailure failure)
                     {
-                        IsConnected = false;
-                        StatusMessage = $"Failed: {string.Join(", ", failure.Errors)}";
-                        Plugin.Log.LogError($"[AP] {StatusMessage}");
+                        HandleLoginFailure(failure);
                     }
                 }
                 catch (Exception ex)
                 {
                     IsConnected = false;
-                    StatusMessage = $"Error: {ex.Message}";
-                    Plugin.Log.LogError($"[AP] Connection error: {ex}");
+                    StatusMessage = string.Format("Error: {0}", ex.Message);
+                    Plugin.Log.LogError(string.Format("[AP] Connection error: {0}", ex));
                 }
             });
         }
 
+        private string PrepareConnectUri(string host, int port)
+        {
+            if (host.Contains("archipelago.gg") || host.StartsWith("wss://"))
+            {
+                string cleanHost = host.Replace("wss://", "").Replace("ws://", "");
+                _tlsProxy = new TlsProxyServer(cleanHost, port);
+                _tlsProxy.Start();
+
+                return string.Format("ws://127.0.0.1:{0}", _tlsProxy.LocalPort);
+            }
+
+            return host.StartsWith("ws://") ? host : string.Format("ws://{0}:{1}", host, port);
+        }
+
+        private void HandleSuccessfulLogin(LoginSuccessful loginSuccess, string slotName, bool isReconnecting)
+        {
+            IsConnected = true;
+            StatusMessage = "Online";
+
+            _storageService.SetAPSaveProfile(Session.RoomState.Seed, slotName);
+            ParseSlotData(loginSuccess.SlotData);
+
+            Plugin.ExecuteOnMainThread(delegate
+            {
+                GameDataManager.Load();
+                if (ArchipelagoUI.Instance != null)
+                {
+                    ArchipelagoUI.Instance.ToggleHasConnectedOnce();
+                }
+            });
+
+            lock (_lockObject)
+            {
+                _checkedLocations.Clear();
+                _offlineCheckQueue.Clear();
+                _itemsToProcess.Clear();
+                ItemHandler.CachedItems.Clear();
+
+                _itemsReceivedIndex = _storageService.LoadItemIndex();
+                _offlineCheckQueue = _storageService.LoadPendingChecks(_checkedLocations);
+
+                ItemHandler.CachedItems.AddRange(Session.Items.AllItemsReceived);
+
+                // Enqueue items received while offline or unprocessed
+                while (_itemsReceivedIndex < Session.Items.AllItemsReceived.Count)
+                {
+                    ItemInfo item = Session.Items.AllItemsReceived[_itemsReceivedIndex];
+                    _itemsToProcess.Enqueue(item.ItemId);
+                    _itemsReceivedIndex++;
+                    _storageService.SaveItemIndex(_itemsReceivedIndex);
+                }
+
+                DataManager.LoadData();
+            }
+
+            // Fetch scouted information for all locations in the room
+            Session.Locations.ScoutLocationsAsync(delegate(Dictionary<long, ScoutedItemInfo> scoutedInfo)
+            {
+                lock (_lockObject)
+                {
+                    ScoutedLocations = scoutedInfo;
+                }
+            }, new List<long>(Session.Locations.AllLocations).ToArray());
+
+            Session.Items.ItemReceived += OnItemReceived;
+            Session.Socket.SocketClosed += OnSocketClosed;
+
+            foreach (long locationId in Session.Locations.AllLocationsChecked)
+            {
+                _checkedLocations.Add(locationId);
+            }
+
+            if (!isReconnecting)
+            {
+                Plugin.StartAPRun();
+            }
+
+            FlushOfflineQueue();
+        }
+
+        private void HandleLoginFailure(LoginFailure failure)
+        {
+            IsConnected = false;
+            StatusMessage = string.Format("Failed: {0}", string.Join(", ", failure.Errors));
+            Plugin.Log.LogError(string.Format("[AP] {0}", StatusMessage));
+        }
+
+        /// <summary>
+        /// Retrieves player alias and item display name for a given scouted location, 
+        /// used in-game for shop slots to let player prioritize which location to unlock first
+        /// </summary>
         public Tuple<string, string> GetLocationInfo(long locationId)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                if (ScoutedLocations != null && ScoutedLocations.TryGetValue(locationId, out ScoutedItemInfo itemInfo))
+                ScoutedItemInfo itemInfo;
+                if (ScoutedLocations != null && ScoutedLocations.TryGetValue(locationId, out itemInfo))
                 {
-                    string playerName = itemInfo.Player?.Alias ?? itemInfo.Player?.Name ?? "Unknown Player";
+                    string playerName = "Unknown Player";
+                    if (itemInfo.Player != null)
+                    {
+                        playerName = itemInfo.Player.Alias ?? itemInfo.Player.Name ?? "Unknown Player";
+                    }
+
                     string itemName = !string.IsNullOrEmpty(itemInfo.ItemDisplayName) ? itemInfo.ItemDisplayName : itemInfo.ItemName;
-                    
+
                     return new Tuple<string, string>(playerName, itemName);
                 }
             }
@@ -176,13 +223,36 @@ namespace WoLArchipelago
             StatusMessage = "Disconnected (Offline Mode)";
         }
 
+        private void DisconnectInternal()
+        {
+            if (Session != null)
+            {
+                Session.Items.ItemReceived -= OnItemReceived;
+                if (Session.Socket != null)
+                {
+                    Session.Socket.SocketClosed -= OnSocketClosed;
+                }
+                Session = null;
+            }
+
+            if (_tlsProxy != null)
+            {
+                _tlsProxy.Stop();
+                _tlsProxy = null;
+            }
+
+            IsConnected = false;
+            StatusMessage = "Offline";
+            Plugin.Log.LogWarning("[AP] Offline mode active.");
+        }
+
         private void OnSocketClosed(string reason)
         {
             IsConnected = false;
             StatusMessage = "Connection Lost!";
-            Plugin.Log.LogWarning($"[AP] Connection lost: {reason}. Attempting reconnect...");
+            Plugin.Log.LogWarning(string.Format("[AP] Connection lost: {0}. Attempting reconnect...", reason));
 
-            Plugin.ExecuteOnMainThread(() =>
+            Plugin.ExecuteOnMainThread(delegate
             {
                 Plugin.Instance.StartCoroutine(AutoReconnectCoroutine());
             });
@@ -194,44 +264,22 @@ namespace WoLArchipelago
 
             if (!IsConnected)
             {
-                Connect(lastHost, lastPort, lastSlot, lastPassword, isReconnecting: true);
+                Connect(_lastHost, _lastPort, _lastSlot, _lastPassword, isReconnecting: true);
             }
-        }
-
-        private void DisconnectInternal()
-        {
-            if (session != null)
-            {
-                session.Items.ItemReceived -= OnItemReceived;
-                if (session.Socket != null)
-                {
-                    session.Socket.SocketClosed -= OnSocketClosed;
-                }
-                session = null;
-            }
-
-            if (tlsProxy != null)
-            {
-                tlsProxy.Stop();
-                tlsProxy = null;
-            }
-
-            IsConnected = false;
-            StatusMessage = "Offline";
-            Plugin.Log.LogWarning("[AP] Offline mode active.");
         }
 
         public void CompleteGoal()
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                pendingGoalCompletion = true;
-                storageService.SaveGoalCompletion(true);
+                _pendingGoalCompletion = true;
+                DataManager.IsGoalCompleted = true;
+                DataManager.SaveData();
 
-                if (IsConnected && session != null)
+                if (IsConnected && Session != null)
                 {
                     Plugin.Log.LogInfo("[AP] Goal completed!");
-                    session.SetGoalAchieved();
+                    Session.SetGoalAchieved();
                 }
                 else
                 {
@@ -242,84 +290,89 @@ namespace WoLArchipelago
 
         public HashSet<long> GetCheckedLocation()
         {
-            return checkedLocations;
+            return _checkedLocations;
         }
 
+        /// <summary>
+        /// Records a location check locally and sends it to Archipelago, or queues it if offline.
+        /// </summary>
         public void SendLocationCheck(long locationId)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                if (checkedLocations.Contains(locationId)) return;
+                if (!_checkedLocations.Add(locationId)) return;
 
-                checkedLocations.Add(locationId);
-
-                if (IsConnected && session != null)
+                if (IsConnected && Session != null)
                 {
-                    Plugin.Log.LogInfo($"[AP] Sending check: {locationId}");
-                    session.Locations.CompleteLocationChecks(locationId);
+                    Plugin.Log.LogInfo(string.Format("[AP] Sending check: {0}", locationId));
+                    Session.Locations.CompleteLocationChecks(locationId);
                 }
                 else
                 {
-                    offlineCheckQueue.Enqueue(locationId);
-                    storageService.SavePendingChecks(offlineCheckQueue);
+                    _offlineCheckQueue.Enqueue(locationId);
+                    _storageService.SavePendingChecks(_offlineCheckQueue);
                 }
             }
         }
 
+        /// <summary>
+        /// Sends queued offline checks and goal completion status once reconnected.
+        /// </summary>
         private void FlushOfflineQueue()
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                if (!IsConnected || session == null) return;
+                if (!IsConnected || Session == null) return;
 
-                if (offlineCheckQueue.Count > 0)
+                if (_offlineCheckQueue.Count > 0)
                 {
-                    List<long> toSend = new List<long>();
-                    while (offlineCheckQueue.Count > 0)
-                    {
-                        toSend.Add(offlineCheckQueue.Dequeue());
-                    }
-                    session.Locations.CompleteLocationChecks(toSend.ToArray());
-                    storageService.SavePendingChecks(offlineCheckQueue);
+                    long[] toSend = _offlineCheckQueue.ToArray();
+                    _offlineCheckQueue.Clear();
+
+                    Session.Locations.CompleteLocationChecks(toSend);
+                    _storageService.SavePendingChecks(_offlineCheckQueue);
                 }
 
-                if (pendingGoalCompletion)
+                if (_pendingGoalCompletion)
                 {
-                    session.SetGoalAchieved();
+                    Session.SetGoalAchieved();
                 }
             }
         }
 
         private void OnItemReceived(IReceivedItemsHelper helper)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                Services.ItemHandler.CachedItems.Clear();
-                Services.ItemHandler.CachedItems.AddRange(helper.AllItemsReceived);
+                ItemHandler.CachedItems.Clear();
+                ItemHandler.CachedItems.AddRange(helper.AllItemsReceived);
 
-                while (itemsReceivedIndex < helper.AllItemsReceived.Count)
+                while (_itemsReceivedIndex < helper.AllItemsReceived.Count)
                 {
-                    ItemInfo item = helper.AllItemsReceived[itemsReceivedIndex];
-                    itemsToProcess.Enqueue(item.ItemId);
-                    itemsReceivedIndex++;
-                    storageService.SaveItemIndex(itemsReceivedIndex);
+                    ItemInfo item = helper.AllItemsReceived[_itemsReceivedIndex];
+                    _itemsToProcess.Enqueue(item.ItemId);
+                    _itemsReceivedIndex++;
+                    _storageService.SaveItemIndex(_itemsReceivedIndex);
                 }
             }
         }
 
+        /// <summary>
+        /// Processes and grant items pending in the incoming queue to the local player.
+        /// </summary>
         public void ProcessIncomingItems()
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                while (itemsToProcess.Count > 0)
+                while (_itemsToProcess.Count > 0)
                 {
-                    long itemId = itemsToProcess.Dequeue();
-                    Services.ItemHandler.GrantPlayerAPItem(itemId);
+                    long itemId = _itemsToProcess.Dequeue();
+                    ItemHandler.GrantPlayerAPItem(itemId);
                 }
             }
         }
 
-        private void ParseSlotData(Dictionary<string, object> slotData)
+        private static void ParseSlotData(Dictionary<string, object> slotData)
         {
             if (slotData == null) return;
 
@@ -337,11 +390,12 @@ namespace WoLArchipelago
                 if (slotData.TryGetValue("starting_element", out object startElem) && startElem != null)
                     StartingElement = startElem.ToString();
 
-                Plugin.Log.LogInfo($"[AP] SlotData loaded: ArcanaMode={StartingArcanaMode}, LicensesMode={ElementLicensesMode}, ChaosRequired={ChaosFragmentsRequired}, StartingElement={StartingElement}");
+                Plugin.Log.LogInfo(string.Format("[AP] SlotData loaded: ArcanaMode={0}, LicensesMode={1}, ChaosRequired={2}, StartingElement={3}",
+                    StartingArcanaMode, ElementLicensesMode, ChaosFragmentsRequired, StartingElement));
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[AP] Error parsing SlotData: {ex}");
+                Plugin.Log.LogError(string.Format("[AP] Error parsing SlotData: {0}", ex));
             }
         }
     }
