@@ -123,6 +123,9 @@ To build the Archipelago world file:
 
 ---
 
+### AI Disclosure
+- AI assistance was used for learning BepInEx/Harmony modding patterns, setting up the TLS 1.2/1.3 proxy (should be removed in future update if possible), and supporting code refactoring. The vast majority of the codebase was authored by hand..
+
 ## License
 
 This project is licensed under the GPL v3 License — see the [LICENSE](LICENSE) file for details.
