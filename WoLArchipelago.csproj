@@ -20,11 +20,20 @@
     <Reference Include="0Harmony">
       <HintPath>.libs/0Harmony.dll</HintPath>
     </Reference>
+    <Reference Include="Archipelago.MultiClient.Net">
+      <HintPath>.libs/Archipelago.MultiClient.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>.libs/Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp">
+      <HintPath>.libs/websocket-sharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Archipelago.MultiClient.Net" Version="6.7.1" />
-    <PackageReference Include="BouncyCastle" Version="1.8.9" NoWarn="NU1902"/>
+    <None Include="libs/c-wspp.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="libs/c-wspp.so" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,8 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-  <Compile Remove="wizardoflegend.apworld/**" />
-  <Content Remove="wizardoflegend.apworld/**" />
-  <None Remove="wizardoflegend.apworld/**" />
-</ItemGroup>
+    <Compile Remove="wizardoflegend.apworld/**" />
+    <Content Remove="wizardoflegend.apworld/**" />
+    <None Remove="wizardoflegend.apworld/**" />
+  </ItemGroup>
 </Project>
