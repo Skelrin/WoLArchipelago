@@ -4,4 +4,3 @@
 - Bonus : Implement deathlink
 - Bonus : Diversify traps
 - Bonus : Queue traps to prevent applying them in hub or all of them when entering the dungeon
-- Bonus : Add Hub Button in pause menu
