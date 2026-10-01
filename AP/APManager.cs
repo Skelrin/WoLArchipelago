@@ -19,7 +19,6 @@ namespace WoLArchipelago
         private readonly HashSet<long> _checkedLocations = [];
         private readonly Queue<long> _itemsToProcess = new();
 
-        private TlsProxyServer _tlsProxy;
         private Queue<long> _offlineCheckQueue = new();
         private int _itemsReceivedIndex;
         private bool _pendingGoalCompletion;
@@ -106,16 +105,8 @@ namespace WoLArchipelago
 
         private string PrepareConnectUri(string host, int port)
         {
-            if (host.Contains("archipelago.gg") || host.StartsWith("wss://"))
-            {
-                string cleanHost = host.Replace("wss://", "").Replace("ws://", "");
-                _tlsProxy = new TlsProxyServer(cleanHost, port);
-                _tlsProxy.Start();
-
-                return string.Format("ws://127.0.0.1:{0}", _tlsProxy.LocalPort);
-            }
-
-            return host.StartsWith("ws://") ? host : string.Format("ws://{0}:{1}", host, port);
+            string scheme = host.Contains("archipelago.gg") ? "wss" : "ws";
+            return string.Format("{0}://{1}:{2}", scheme, host, port);
         }
 
         private void HandleSuccessfulLogin(LoginSuccessful loginSuccess, string slotName, bool isReconnecting)
@@ -233,12 +224,6 @@ namespace WoLArchipelago
                     Session.Socket.SocketClosed -= OnSocketClosed;
                 }
                 Session = null;
-            }
-
-            if (_tlsProxy != null)
-            {
-                _tlsProxy.Stop();
-                _tlsProxy = null;
             }
 
             IsConnected = false;
