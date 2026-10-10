@@ -123,8 +123,13 @@ namespace WoLArchipelago.Services
             int hpBoostCount = GetItemCountByName("Max HP Boost");
             int totalBonusHP = hpBoostCount * 50;
 
-            NumVarStatMod hpMod = new("AP_MaxHP_Mod", totalBonusHP, fillToNewMax: restoreAllHP);
+            NumVarStatMod hpMod = new("AP_MaxHP_Mod", totalBonusHP);
             player.health.healthStat.AddMod(hpMod);
+
+            if (restoreAllHP)
+            {
+                player.health.CurrentHealthValue = Mathf.RoundToInt(player.health.healthStat.ModifiedValue);
+            }
         }
 
         public static void ProcessHPBoostItem()
