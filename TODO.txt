@@ -2,9 +2,9 @@
 - Reduce Items and Locations by grouping relics and arcanas into bundle of 3
 
 - Fix : Freeze when sending checks error : Failed to get input data
+- Fix : Loop NPC not correctly spawning
 - Fix : Check x-2 should trigger even though no keys
 - Fix : Picking items that bundles together when no more slot available not working
-- FIx : Relics like ArmorHPUpWithCursedRelics, MaxHealthUpOnTakeDamage that give HPMods full regen player when picking up
 - Fix : Opening MiniChest doesn't trigger chest slot sometimes
 - Fix : Prevent soft lock with Doctor and Shuffler by forbid item Standard and Signature Arcana Slot (be careful if arcana slot in specific biome locked by npc check) solution : force one of the two item accessible sphere 1 or rule with no dependancies exist
 
