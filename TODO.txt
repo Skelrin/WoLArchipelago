@@ -1,7 +1,6 @@
 - Add GameUIBroadcas when breaking a chest and sending other things
 - Reduce Items and Locations by grouping relics and arcanas into bundle of 3
 
-- Fix : Loop NPC not correctly spawning
 - Fix : Check x-2 should trigger even though no keys
 - Fix : Picking items that bundles together when no more slot available not working
 - Fix : Opening MiniChest doesn't trigger chest slot sometimes
