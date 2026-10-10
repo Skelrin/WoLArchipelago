@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using WoLArchipelago.Services;
 
@@ -51,10 +52,49 @@ namespace WoLArchipelago.Patches
                     titleScreenBtn.localPosition = new Vector3(startPos.x, startY + (adjustedSpacing * 2), startPos.z);
                     optionsBtn.localPosition = new Vector3(startPos.x, startY + (adjustedSpacing * 3), startPos.z);
                     quitBtn.localPosition = new Vector3(startPos.x, startY + (adjustedSpacing * 4), startPos.z);
+
+                    Transform[] buttons = [resumeBtn, hubBtn, titleScreenBtn, optionsBtn, quitBtn];
+                    for (int i = 0; i < buttons.Length; i++)
+                    {
+                        GameObject btnObj = buttons[i].gameObject;
+                        
+                        var existingHandler = btnObj.GetComponent<PauseMenuButtonMouseHandler>();
+                        if (existingHandler != null)
+                        {
+                            Object.Destroy(existingHandler);
+                        }
+
+                        var mouseHandler = btnObj.AddComponent<PauseMenuButtonMouseHandler>();
+                        mouseHandler.pauseMenuUI = __instance;
+                        mouseHandler.optionIndex = i;
+                    }
                 }
                 catch (System.Exception ex)
                 {
                     Plugin.Log.LogError($"[AP] Error modifying pause menu layout: {ex}");
+                }
+            }
+        }
+
+        public class PauseMenuButtonMouseHandler : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
+        {
+            public PauseMenuUI pauseMenuUI;
+            public int optionIndex;
+
+            public void OnPointerEnter(PointerEventData eventData)
+            {
+                if (pauseMenuUI != null && pauseMenuUI.hasFocus)
+                {
+                    pauseMenuUI.SelectOption(optionIndex);
+                }
+            }
+
+            public void OnPointerClick(PointerEventData eventData)
+            {
+                if (pauseMenuUI != null && pauseMenuUI.hasFocus)
+                {
+                    pauseMenuUI.SelectOption(optionIndex);
+                    pauseMenuUI.OptionWasClicked();
                 }
             }
         }
