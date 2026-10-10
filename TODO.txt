@@ -1,7 +1,6 @@
 - Add GameUIBroadcas when breaking a chest and sending other things
 - Reduce Items and Locations by grouping relics and arcanas into bundle of 3
 
-- Fix : Freeze when sending checks error : Failed to get input data
 - Fix : Loop NPC not correctly spawning
 - Fix : Check x-2 should trigger even though no keys
 - Fix : Picking items that bundles together when no more slot available not working

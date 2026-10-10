@@ -290,7 +290,24 @@ namespace WoLArchipelago
                 if (IsConnected && Session != null)
                 {
                     Plugin.Log.LogInfo(string.Format("[AP] Sending check: {0}", locationId));
-                    Session.Locations.CompleteLocationChecks(locationId);
+                    ThreadPool.QueueUserWorkItem(delegate
+                    {
+                        try
+                        {
+                            Session.Locations.CompleteLocationChecks(locationId);
+                        }
+                        catch (Exception ex)
+                        {
+                            Plugin.Log.LogError(string.Format("[AP] Error sending location check {0}: {1}", locationId, ex.Message));
+                            
+                            lock (_lockObject)
+                            {
+                                _checkedLocations.Remove(locationId);
+                                _offlineCheckQueue.Enqueue(locationId);
+                                _storageService.SavePendingChecks(_offlineCheckQueue);
+                            }
+                        }
+                    });
                 }
                 else
                 {
@@ -311,16 +328,36 @@ namespace WoLArchipelago
 
                 if (_offlineCheckQueue.Count > 0)
                 {
-                    long[] toSend = _offlineCheckQueue.ToArray();
+                    long[] toSend = [.. _offlineCheckQueue];
                     _offlineCheckQueue.Clear();
-
-                    Session.Locations.CompleteLocationChecks(toSend);
                     _storageService.SavePendingChecks(_offlineCheckQueue);
+
+                    ThreadPool.QueueUserWorkItem(delegate
+                    {
+                        try
+                        {
+                            Session.Locations.CompleteLocationChecks(toSend);
+                        }
+                        catch (Exception ex)
+                        {
+                            Plugin.Log.LogError(string.Format("[AP] Error flushing offline checks: {0}", ex.Message));
+                        }
+                    });
                 }
 
                 if (_pendingGoalCompletion)
                 {
-                    Session.SetGoalAchieved();
+                    ThreadPool.QueueUserWorkItem(delegate
+                    {
+                        try
+                        {
+                            Session.SetGoalAchieved();
+                        }
+                        catch (Exception ex)
+                        {
+                            Plugin.Log.LogError(string.Format("[AP] Error setting goal achieved: {0}", ex.Message));
+                        }
+                    });
                 }
             }
         }
