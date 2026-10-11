@@ -1,7 +1,6 @@
 - Add GameUIBroadcas when breaking a chest and sending other things
 - Reduce Items and Locations by grouping relics and arcanas into bundle of 3
 
-- Fix : Check x-2 should trigger even though no keys
 - Fix : Picking items that bundles together when no more slot available not working
 - Fix : Opening MiniChest doesn't trigger chest slot sometimes
 - Fix : Prevent soft lock with Doctor and Shuffler by forbid item Standard and Signature Arcana Slot (be careful if arcana slot in specific biome locked by npc check) solution : force one of the two item accessible sphere 1 or rule with no dependancies exist
