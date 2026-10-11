@@ -61,27 +61,35 @@ namespace WoLArchipelago.Patches
 
             int maxAllowedRelics = 1 + ItemHandler.GetItemCountByName("Relic Slot Upgrade");
 
-            if (player.inventory.Count < maxAllowedRelics)
+            if (player.inventory.Count < maxAllowedRelics || IsItemGroupable(player, itemDrop.itemID))
             {
                 return true;
             }
 
             string itemToDrop = null;
+            string groupToDrop = null;
+
             foreach (var kvp in player.inventory.itemDict)
             {
-                if (kvp.Value != null && !kvp.Value.isCursed)
+                if (kvp.Value == null || kvp.Value.isCursed)
+                    continue;
+
+                if (kvp.Value.isGroupItem)
+                {
+                    if (groupToDrop == null) groupToDrop = kvp.Key;
+                }
+                else
                 {
                     itemToDrop = kvp.Key;
                     break;
                 }
             }
 
-            if (itemToDrop != null)
+            if (itemToDrop == null)
+                itemToDrop = groupToDrop;
+
+            if (itemToDrop != null && player.inventory.DropItem(itemToDrop))
             {
-                if (player.inventory.RemoveItem(itemToDrop))
-                {
-                    LootManager.DropItem(player.transform.position, 1, itemToDrop, false, 0);
-                }
                 return true;
             }
 
@@ -91,6 +99,14 @@ namespace WoLArchipelago.Patches
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks if item can be grouped with other items from player inventory
+        /// </summary>
+        public static bool IsItemGroupable(Player player, string itemID)
+        {
+            return LootManager.completeItemDict.TryGetValue(itemID, out Item item) && player.inventory.CheckItemCombine(item);
         }
     }
 }

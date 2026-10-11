@@ -189,7 +189,22 @@ namespace WoLArchipelago.Patches
                 GameController.resetHubVars = true;
 
                 GameController.LoadLevel("Hub");
-                ItemHandler.SyncPlayerMaxHP(ItemHandler.GetActivePlayer(), true);
+
+                Player player = ItemHandler.GetActivePlayer();
+
+                ItemHandler.SyncPlayerMaxHP(player, true);
+
+                player.inventory.ClearInventory();
+
+                player.GiveDesignatedItem();
+
+                foreach (string relicId in DataManager.SavedHubRelics)
+                {
+                    if (relicId != player.designatedItemID && !player.inventory.ContainsItem(relicId))
+                    {
+                        player.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
+                    }
+                }
             }
         }
     }
