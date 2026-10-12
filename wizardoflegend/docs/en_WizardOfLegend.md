@@ -10,7 +10,7 @@ Wizard of Legend is a fast-paced action roguelike focused on spell-slinging comb
 * **Arcana Slots & Relics**: Your ability slots (Standard Arcana, Signature Arcana, and Bonus Slots) and Relic slots are locked initially and must be unlocked via MultiWorld progression items.
 * **Element Licenses**: If enabled, picking up or using Arcana of specific elements (Fire, Water, Earth, Air, Lightning) requires finding the corresponding Element License.
 * **Dungeon Access & Biomes**: Stage progression requires finding **Boss Keys**, while accessing elemental chests and specific elemental enemies requires **Biome Keys**.
-* **Shops & NPCs**: Spawn shops (Outfit, Relic, Arcana) require **Shop Upgrades** to unlock higher inventory tiers.
+* **Shops & NPCs**: Spawn shops (Outfit, Relic, Arcana) require **Shop Upgrades** to open and unlock higher inventory tiers.
 
 ## What is the goal of Wizard of Legend?
 

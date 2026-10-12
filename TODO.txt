@@ -1,10 +1,11 @@
-- Add GameUIBroadcas when breaking a chest and sending other things
-- Reduce Items and Locations by grouping relics and arcanas into bundle of 3
-
-- Fix : Opening MiniChest doesn't trigger chest slot sometimes
-- Fix : Prevent soft lock with Doctor and Shuffler by forbid item Standard and Signature Arcana Slot (be careful if arcana slot in specific biome locked by npc check) solution : force one of the two item accessible sphere 1 or rule with no dependancies exist
-
-- Bonus : Let player select price in apworld option
-- Bonus : Implement deathlink
-- Bonus : Diversify traps
-- Bonus : Queue traps to prevent applying them in hub or all of them when entering the dungeon
+- Update apworld rules to have access to X Member Defeated only after specific keys
+- Separate NPCs token relics from other relics in item pool and lock their locations behind the tokens
+- Reduce Items and Locations by grouping relics and arcanas into bundle of 2 to remove grindy locations and better pace the game
+- Save host, port, slotname to prevent retyping them
+- Allow random drop of arcanas and/or relics from killed mobs inside the dungeon
+- Implement deathlink
+- Queue traps to prevent applying them in hub or all of them when entering the dungeon
+- Diversify traps
+- Add more options to the yaml
+- Add top right logging panel with every exchange in the multiworld
+- Add a tracker in pause menu to see locations and items progression
