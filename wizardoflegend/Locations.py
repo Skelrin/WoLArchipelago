@@ -24,7 +24,6 @@ def _add_multiple_locations(base_name: str, count: int, category: str):
 bosses = ["AirBoss", "EarthBoss", "FireBoss", "IceBoss", "LightningBoss"]
 for b in bosses:
     _add_location(f"{b} Defeated", "Boss")
-    _add_location(f"{b} Defeated 5 times", "Boss")
 
 _add_location("FinalBoss Defeated", "Boss")
 
@@ -41,13 +40,10 @@ for e in enemies:
     _add_location(f"{e} Defeated 50 times", "Enemies")
 
 _add_location("MovingStatue Defeated 10 times", "Enemies")
-_add_location("MovingStatue Defeated 20 times", "Enemies")
 
 _add_location("MimicEnemy Defeated 5 times", "Enemies")
-_add_location("MimicEnemy Defeated 10 times", "Enemies")
 
 _add_location("Pinata Defeated", "Dungeon")
-_add_location("Pinata Defeated 5 times", "Dungeon")
 
 # ELEMENTAL ENEMIES
 elements = ["Fire", "Water", "Earth", "Air", "Lightning"]
@@ -57,24 +53,24 @@ for elem in elements:
 
 # SPAWN SHOPS
 _add_multiple_locations("Outfit Shop Slot", 16, "Spawn Shops")
-_add_multiple_locations("Relic Shop Slot", 64, "Spawn Shops")
-_add_multiple_locations("Arcana Shop Slot", 64, "Spawn Shops")
+_add_multiple_locations("Relic Shop Slot", 32, "Spawn Shops")
+_add_multiple_locations("Arcana Shop Slot", 32, "Spawn Shops")
 
 # DUNGEON NPCS & EVENTS
-_add_multiple_locations("Doctor Song Slot", 10, "Dungeon")
-_add_multiple_locations("Savile the Tailor Slot", 10, "Dungeon")
-_add_multiple_locations("Nox the Unfortunate Slot", 40, "Dungeon")
-_add_multiple_locations("Nocturne the Cardist Slot", 10, "Dungeon")
-_add_multiple_locations("Cremire the Collector Slot", 10, "Dungeon")
-_add_multiple_locations("Doki the Banker Slot", 10, "Dungeon")
+_add_multiple_locations("Doctor Song Slot", 6, "Dungeon")
+_add_multiple_locations("Savile the Tailor Slot", 6, "Dungeon")
+_add_multiple_locations("Nox the Unfortunate Slot", 20, "Dungeon")
+_add_multiple_locations("Nocturne the Cardist Slot", 6, "Dungeon")
+_add_multiple_locations("Cremire the Collector Slot", 6, "Dungeon")
+_add_multiple_locations("Doki the Banker Slot", 6, "Dungeon")
 _add_multiple_locations("Strange Time Keeper Slot", 2, "Dungeon")
 
 # CHEST MILESTONES
 for elem in elements:
-    _add_multiple_locations(f"{elem} Chest Slot", 20, "Chests")
+    _add_multiple_locations(f"{elem} Chest Slot", 10, "Chests")
 
-_add_multiple_locations("MiniBoss Chest Slot", 40, "Chests")
-_add_multiple_locations("Boss Chest Slot", 20, "Chests")
+_add_multiple_locations("MiniBoss Chest Slot", 30, "Chests")
+_add_multiple_locations("Boss Chest Slot", 15, "Chests")
 
 chest_milestones = [10, 25, 50, 75, 100]
 for count in chest_milestones:
@@ -92,19 +88,12 @@ _add_location("First Council Member Defeated", "Progression")
 _add_location("Second Council Member Defeated", "Progression")
 _add_location("Third Council Member Defeated", "Progression")
 
-_add_location("Break 50 Paintings", "Milestones")
 _add_location("Break 100 Paintings", "Milestones")
 
-_add_location("Die 5 times", "Milestones")
-_add_location("Die 10 times", "Milestones")
-
-_add_location("Fall 25 times", "Milestones")
-_add_location("Fall 50 times", "Milestones")
-
-_add_location("Dash 100 times", "Milestones")
-_add_location("Dash 500 times", "Milestones")
-
-_add_location("Have 500 chaos gems", "Milestones")
 _add_location("Have 1000 gold", "Milestones")
 
-_add_location("Perfect a boss", "Milestones")
+for b in bosses:
+    _add_location(f"Perfect {b}", "Milestones")
+
+for m in minibosses:
+    _add_location(f"Perfect {m}", "Milestones")

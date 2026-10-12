@@ -1,6 +1,8 @@
-- Update apworld rules to have access to X Member Defeated only after specific keys
-- Separate NPCs token relics from other relics in item pool and lock their locations behind the tokens
-- Reduce Items and Locations by grouping relics and arcanas into bundle of 2 to remove grindy locations and better pace the game
+- Update perfect a boss location for every boss and minibosses
+- Update NPC slots unlock only if player have correct token
+- Update traps
+- Update items received for fillers, tokens etc
+- Update Generate Relics and arcanas method for the bundles (and the last bundle that might contain only one item)
 - Save host, port, slotname to prevent retyping them
 - Allow random drop of arcanas and/or relics from killed mobs inside the dungeon
 - Implement deathlink

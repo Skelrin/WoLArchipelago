@@ -70,34 +70,53 @@ item_table: Dict[str, WoLItemData] = {
     "Lightning Element License": WoLItemData("Licenses", 871122014, ItemClassification.progression),
 
     # -------------------------------------------------------------------------
-    # Stats & Upgrades
+    # Upgrades
     # -------------------------------------------------------------------------
     "Max HP Boost":             WoLItemData("Upgrades", 871123001, ItemClassification.useful, max_quantity=10),
-    "Gold Pack":                WoLItemData("Upgrades", 871123002, ItemClassification.useful, max_quantity=10),
-    "Chaos Gems Pack":          WoLItemData("Upgrades", 871123003, ItemClassification.useful, max_quantity=5),
-    "Relic Slot Upgrade":       WoLItemData("Upgrades", 871123004, ItemClassification.progression, max_quantity=11),
+    "Relic Slot Upgrade":       WoLItemData("Upgrades", 871123002, ItemClassification.progression, max_quantity=11),
 
+    # -------------------------------------------------------------------------
+    # Fillers
+    # -------------------------------------------------------------------------
+    "Heal Orb":                 WoLItemData("Fillers", 871123003, ItemClassification.filler),
+    "Gold Pack":                WoLItemData("Fillers", 871123004, ItemClassification.filler),
+    "Chaos Gems Pack":          WoLItemData("Fillers", 871123005, ItemClassification.filler),
 
     # -------------------------------------------------------------------------
     # Traps
     # -------------------------------------------------------------------------
-    "Cursed Trap":              WoLItemData("Traps", 871124001, ItemClassification.trap, max_quantity=10),
+    "Cursed Trap":              WoLItemData("Traps", 871124001, ItemClassification.trap, max_quantity=5),
+    "Mob Trap":                 WoLItemData("Traps", 871124002, ItemClassification.trap, max_quantity=5),
+    "Heal Trap":                WoLItemData("Traps", 871124003, ItemClassification.trap, max_quantity=5),
+    "Gold Trap":                WoLItemData("Traps", 871124004, ItemClassification.trap, max_quantity=5),
 
     # -------------------------------------------------------------------------
     # Generic Relics
     # -------------------------------------------------------------------------
-    "Relic Tier 1":             WoLItemData("Relics", 871125001, max_quantity=25),
-    "Relic Tier 2":             WoLItemData("Relics", 871125002, max_quantity=36),
-    "Relic Tier 3":             WoLItemData("Relics", 871125003, max_quantity=41),
-    "Relic Tier 4":             WoLItemData("Relics", 871125004, ItemClassification.useful, max_quantity=36),
-    "Relic Tier 5":             WoLItemData("Relics", 871125005, ItemClassification.useful, max_quantity=77),
+    "Relic Bundle Tier 1":             WoLItemData("Relics", 871125001, max_quantity=13),
+    "Relic Bundle Tier 2":             WoLItemData("Relics", 871125002, max_quantity=18),
+    "Relic Bundle Tier 3":             WoLItemData("Relics", 871125003, max_quantity=20),
+    "Relic Bundle Tier 4":             WoLItemData("Relics", 871125004, ItemClassification.useful, max_quantity=16),
+    "Relic Bundle Tier 5":             WoLItemData("Relics", 871125005, ItemClassification.useful, max_quantity=39),
+    
+    # -------------------------------------------------------------------------
+    # NPC Relics
+    # -------------------------------------------------------------------------   
+    "TokenBanker":              WoLItemData("Relics", 871125006, ItemClassification.progression),
+    "TokenShuffler":            WoLItemData("Relics", 871125007, ItemClassification.progression),
+    "TokenDoctor":              WoLItemData("Relics", 871125008, ItemClassification.progression),
+    "TokenCursed":              WoLItemData("Relics", 871125009, ItemClassification.progression),
+    "TokenTailor":              WoLItemData("Relics", 871125010, ItemClassification.progression),
+    "TokenCollector":           WoLItemData("Relics", 871125011, ItemClassification.progression),
+    "TokenPinata":              WoLItemData("Relics", 871125012, ItemClassification.progression),
+
 
     # -------------------------------------------------------------------------
     # Generic Arcanas
     # -------------------------------------------------------------------------
-    "Arcana Tier 1":            WoLItemData("Arcanas", 871126001, max_quantity=17),
-    "Arcana Tier 2":            WoLItemData("Arcanas", 871126002, max_quantity=30),
-    "Arcana Tier 3":            WoLItemData("Arcanas", 871126003, max_quantity=30),
-    "Arcana Tier 4":            WoLItemData("Arcanas", 871126004, ItemClassification.useful, max_quantity=40),
-    "Arcana Tier 5":            WoLItemData("Arcanas", 871126005, ItemClassification.useful, max_quantity=63),
+    "Arcana Bundle Tier 1":            WoLItemData("Arcanas", 871126001, max_quantity=9),
+    "Arcana Bundle Tier 2":            WoLItemData("Arcanas", 871126002, max_quantity=15),
+    "Arcana Bundle Tier 3":            WoLItemData("Arcanas", 871126003, max_quantity=15),
+    "Arcana Bundle Tier 4":            WoLItemData("Arcanas", 871126004, ItemClassification.useful, max_quantity=20),
+    "Arcana Bundle Tier 5":            WoLItemData("Arcanas", 871126005, ItemClassification.useful, max_quantity=32),
 }
