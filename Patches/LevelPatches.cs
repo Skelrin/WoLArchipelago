@@ -31,6 +31,8 @@ namespace WoLArchipelago.Patches
                 int currentTier = GameController.tierCount;
                 int currentStage = GameController.stageCount;
 
+                ProcessLocationCheck(currentTier, currentStage);
+
                 if (IsStageLocked(currentTier, currentStage))
                 {
                     Player player = Player.CheckForPlayer(col);
@@ -46,8 +48,6 @@ namespace WoLArchipelago.Patches
                     }
                     return false;
                 }
-
-                ProcessLocationCheck(currentTier, currentStage);
 
                 return true;
             }

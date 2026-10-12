@@ -21,7 +21,7 @@ For full installation and setup instructions, please consult the official setup 
 
 Quick summary:
 1. Install **BepInEx 5.x** into your Wizard of Legend game directory.
-2. Download the latest mod release from [GitHub Releases](https://github.com/Skelrin/WoLArchipelago/releases) or Thunderstore.
+2. Download the latest mod release from [GitHub Releases](https://github.com/Skelrin/WoLArchipelago/releases) or [Thunderstore](https://thunderstore.io/c/wizard-of-legend/p/BDLP/WoLArchipelago/).
 3. Extract the contents into `BepInEx/plugins/`.
 4. Launch the game and click **CONNECT TO ARCHIPELAGO** on the title screen.
 
@@ -109,6 +109,13 @@ For full details on options and logic, check **[en_WizardOfLegend.md](wizardofle
    * From `BepInEx/core/`:
      * `0Harmony.dll`
      * `BepInEx.dll`
+   * From <a href="https://github.com/ArchipelagoMW/Archipelago.MultiClient.Net/releases"><code>Archipelago.MultiClient.Net</code></a>:
+     * `Archipelago.MultiClient.Net.dll`
+     * `Newtonsoft.Json.dll`
+   * From <a href="https://github.com/black-sliver/c-wspp-websocket-sharp/releases"><code>c-wspp-websocket-sharp</code></a>:
+     * `websocket-sharp.dll`
+     * `c-wspp.dll`
+     * `c-wspp.so`
 4. Open `WoLArchipelago.csproj` in Visual Studio and build the solution using :
    ```bash
    dotnet build
