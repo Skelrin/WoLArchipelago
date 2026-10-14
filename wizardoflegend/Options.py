@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from Options import Choice, Range, PerGameCommonOptions
+from Options import Choice, Range, Toggle, PerGameCommonOptions
 
 class ChaosFragmentsRequired(Range):
     """Number of chaos fragment needed to unlock access to Master Sura."""
@@ -35,6 +35,14 @@ class ElementLicensesMode(Choice):
     option_required = 1
     default = 1
 
+class PerfectBossLocations(Toggle):
+    """
+    Add a location for each boss defeated without taking any damage (Perfect AirBoss, Perfect EarthBoss, ...).
+    - false : Perfect boss locations are disabled (default).
+    - true : Perfect boss locations are enabled (5 extra locations).
+    """
+    display_name = "Perfect Boss Locations"
+    default = 0
 
 @dataclass
 class WoLOptions(PerGameCommonOptions):
@@ -42,3 +50,4 @@ class WoLOptions(PerGameCommonOptions):
     chaos_fragments_total: ChaosFragmentsTotal
     starting_arcana_mode: StartingArcanaMode
     element_licenses_mode: ElementLicensesMode
+    perfect_boss_locations: PerfectBossLocations

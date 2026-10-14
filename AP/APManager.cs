@@ -285,6 +285,8 @@ namespace WoLArchipelago
         {
             lock (_lockObject)
             {
+                if (ScoutedLocations != null && ScoutedLocations.Count > 0 && !ScoutedLocations.ContainsKey(locationId)) return;
+
                 if (!_checkedLocations.Add(locationId)) return;
 
                 if (IsConnected && Session != null)

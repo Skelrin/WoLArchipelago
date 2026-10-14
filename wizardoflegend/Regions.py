@@ -1,12 +1,13 @@
 import re
 
 from BaseClasses import Region
-from .Locations import WoLLocation, location_table
+from .Locations import WoLLocation, location_table, bosses
 
 STAGE_1_LOCS = {"First Council Member Defeated"}
 STAGE_2_LOCS = {"Second Council Member Defeated", "Break 100 Paintings"}
 STAGE_3_LOCS = {"Third Council Member Defeated", "Have 1000 gold"}
 
+PERFECT_BOSS_NAMES = {f"Perfect {b}" for b in bosses}
 NPCS = ("Doctor", "Savile", "Nocturne", "Cremire", "Doki")
 ELEMENTS = ("Fire", "Water", "Earth", "Air", "Lightning")
 ELEMENT_CHESTS = tuple(f"{elem} Chest Slot" for elem in ELEMENTS)
@@ -77,6 +78,8 @@ def create_regions(world, player):
     regions = {name: Region(name, player, world.multiworld) for name in region_names}
 
     for loc_name, loc_data in location_table.items():
+        if loc_name in PERFECT_BOSS_NAMES and not world.options.perfect_boss_locations:
+            continue
         target_region = _get_target_region(loc_name, loc_data, regions)
         target_region.locations.append(
             WoLLocation(player, loc_name, loc_data.code, target_region)

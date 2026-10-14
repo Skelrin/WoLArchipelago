@@ -87,7 +87,10 @@ def set_rules(world, player):
             location_rule(f"{elem} Enemies Defeated {count} times", has_item(biome_key))
 
     for boss, elem in BOSS_ELEMENTS.items():
-        for name in (f"{boss} Defeated", f"Perfect {boss}"):
+        names = [f"{boss} Defeated"]
+        if options.perfect_boss_locations:
+            names.append(f"Perfect {boss}")
+        for name in names:
             location_rule(name, boss_and_biome(ELEMENT_KEYS[elem]))
 
     for shop_prefix, per_level in SHOP_SLOTS_PER_LEVEL.items():

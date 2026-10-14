@@ -1,4 +1,3 @@
-- Update perfect a boss location for every boss and minibosses
 - Update NPC slots unlock only if player have correct token
 - Update traps
 - Update items received for fillers, tokens etc

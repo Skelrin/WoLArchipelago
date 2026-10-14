@@ -41,6 +41,14 @@ namespace WoLArchipelago.Patches
                 {
                     Plugin.AP.CompleteGoal();
                 }
+
+                if (PerfectFightHelper.MiniBosses.Contains(name) && PerfectFightHelper.MiniBossStartHealth != null)
+                {
+                    if (PerfectFightHelper.IsPerfect(PerfectFightHelper.MiniBossStartHealth))
+                        CheckHandler.CheckLocation($"Perfect {name}");
+
+                    PerfectFightHelper.MiniBossStartHealth = null;
+                }
             }
         }
 
