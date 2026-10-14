@@ -1,4 +1,4 @@
-- Update NPC slots unlock only if player have correct token
+- Update NPC slots unlock only if player have correct token (place relics or arcanas on empty slots)
 - Update traps
 - Update items received for fillers, tokens etc
 - Update Generate Relics and arcanas method for the bundles (and the last bundle that might contain only one item)
