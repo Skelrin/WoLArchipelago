@@ -1,12 +1,7 @@
 - Update NPC slots unlock only if player have correct token (place relics or arcanas on empty slots)
-- Update traps
-- Update items received for fillers, tokens etc
-- Update Generate Relics and arcanas method for the bundles (and the last bundle that might contain only one item)
 - Save host, port, slotname to prevent retyping them
 - Allow random drop of arcanas and/or relics from killed mobs inside the dungeon
 - Implement deathlink
-- Queue traps to prevent applying them in hub or all of them when entering the dungeon
-- Diversify traps
 - Add more options to the yaml
-- Add top right logging panel with every exchange in the multiworld
+- Add top right logging panel with every exchange in the multiworld (remove all broadcast message)
 - Add a tracker in pause menu to see locations and items progression
