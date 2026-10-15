@@ -10,6 +10,10 @@ namespace WoLArchipelago.Patches
     [HarmonyPatch(typeof(ItemStoreItem))]
     public class ItemStoreItemPatches
     {
+        private const string TokenCursedItemId = "TokenCursed"; 
+        private const float LockedMessageCooldown = 2f;
+        private static float _nextLockedMessageTime;
+
         [HarmonyPostfix]
         [HarmonyPatch(nameof(ItemStoreItem.Start))]
         public static void StartPostfix(ItemStoreItem __instance)
@@ -59,6 +63,20 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(nameof(ItemStoreItem.Buy))]
         public static bool BuyPrefix(ItemStoreItem __instance, Player player)
         {
+            if (__instance.cursedOnly && ItemHandler.GetItemCountByName(TokenCursedItemId) < 1)
+            {
+                __instance.PlayDenyBuyEffects();
+
+                float now = Time.realtimeSinceStartup;
+                if (now >= _nextLockedMessageTime)
+                {
+                    _nextLockedMessageTime = now + LockedMessageCooldown;
+                    GameUI.BroadcastNoticeMessage("You haven't unlocked the TokenCursed yet.");
+                }
+
+                return false;
+            }
+
             return ShopService.ProcessPurchase(
                 __instance.gameObject,
                 __instance.priceMarker,
