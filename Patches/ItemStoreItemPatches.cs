@@ -5,14 +5,13 @@ using WoLArchipelago.Services;
 namespace WoLArchipelago.Patches
 {
     /// <summary>
-    /// Patches for ItemStoreItem that convert standard relic and cursed shop items with Archipelago location checks
+    /// Patches for ItemStoreItem that convert standard relic and cursed shop items with Archipelago location checks.
+    /// Vanilla items are kept as a fallback in the dungeon when no AP location is available (or Nox is locked).
     /// </summary>
     [HarmonyPatch(typeof(ItemStoreItem))]
     public class ItemStoreItemPatches
     {
-        private const string TokenCursedItemId = "TokenCursed"; 
-        private const float LockedMessageCooldown = 2f;
-        private static float _nextLockedMessageTime;
+        private const string TokenCursedItemId = "TokenCursed";
 
         [HarmonyPostfix]
         [HarmonyPatch(nameof(ItemStoreItem.Start))]
@@ -32,9 +31,15 @@ namespace WoLArchipelago.Patches
                 maxSlots = ShopService.GetMaxShopSlots();
             }
 
-            if (!ShopService.TryGetNextLocation(slotFormat, maxSlots, out long locId, out string locName))
+            bool cursedUnlocked = !__instance.cursedOnly
+                                || ItemHandler.GetItemCountByName(TokenCursedItemId) > 0;
+
+            if (!cursedUnlocked || !ShopService.TryGetNextLocation(slotFormat, maxSlots, out long locId, out string locName))
             {
-                ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
+                if (__instance.usePlatinumCost)
+                {
+                    ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
+                }
                 return;
             }
 
@@ -63,19 +68,8 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(nameof(ItemStoreItem.Buy))]
         public static bool BuyPrefix(ItemStoreItem __instance, Player player)
         {
-            if (__instance.cursedOnly && ItemHandler.GetItemCountByName(TokenCursedItemId) < 1)
-            {
-                __instance.PlayDenyBuyEffects();
-
-                float now = Time.realtimeSinceStartup;
-                if (now >= _nextLockedMessageTime)
-                {
-                    _nextLockedMessageTime = now + LockedMessageCooldown;
-                    GameUI.BroadcastNoticeMessage("You haven't unlocked the TokenCursed yet.");
-                }
-
-                return false;
-            }
+            if (!ShopService.IsAPShopItem(__instance.gameObject))
+                return PrepareVanillaPurchase(__instance, player);
 
             return ShopService.ProcessPurchase(
                 __instance.gameObject,
@@ -98,6 +92,22 @@ namespace WoLArchipelago.Patches
                 },
                 onFailure: __instance.PlayDenyBuyEffects
             );
+        }
+
+        private static bool PrepareVanillaPurchase(ItemStoreItem item, Player player)
+        {
+            if (player == null) return true;
+
+            if (player.inventory.CursedCount >= 12
+                || player.inventory.ContainsItem(item.ID)
+                || Player.goldWallet.balance < item.Cost)
+                return true;
+
+            if (ItemDropPatches.TryMakeRoomForPickup(player, item.ID))
+                return true;
+
+            item.PlayDenyBuyEffects();
+            return false;
         }
     }
 }

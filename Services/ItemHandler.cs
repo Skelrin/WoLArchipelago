@@ -20,14 +20,29 @@ namespace WoLArchipelago.Services
         private const int ItemsPerBundle = 2;
         private const string TokenPrefix = "Token";
 
-        public static List<ItemInfo> CachedItems { get; set; } = [];
+        private static volatile List<ItemInfo> _cachedItems = [];
+        private static volatile HashSet<long> _unlockedIds = [];
 
         private static List<string> _cachedCursedItemIDs;
         private static string[] _cachedEnemyNames;
 
         private static readonly Dictionary<string, int> NameCounts = [];
         private static List<ItemInfo> _countedList;
-        private static int _countedTotal = -1;
+        
+        public static List<ItemInfo> CachedItems
+        {
+            get => _cachedItems;
+            set
+            {
+                List<ItemInfo> list = value ?? [];
+                HashSet<long> ids = [];
+                foreach (ItemInfo it in list)
+                    if (it != null) ids.Add(it.ItemId);
+
+                _unlockedIds = ids;
+                _cachedItems = list;
+            }
+        }
 
         public static List<string> CursedItemIDs
         {
@@ -68,26 +83,24 @@ namespace WoLArchipelago.Services
             return null;
         }
 
-        public static bool IsItemUnlocked(long itemId)
-        {
-            return CachedItems != null && CachedItems.Exists(item => item.ItemId == itemId);
-        }
+        public static bool IsItemUnlocked(long itemId) => _unlockedIds.Contains(itemId);
 
         public static int GetItemCountByName(string name)
         {
-            if (CachedItems == null) return 0;
+            List<ItemInfo> items = _cachedItems;
+            if (items == null) return 0;
 
-            if (!ReferenceEquals(_countedList, CachedItems) || _countedTotal != CachedItems.Count)
+            if (!ReferenceEquals(_countedList, items))
             {
                 NameCounts.Clear();
-                foreach (ItemInfo item in CachedItems)
+                foreach (ItemInfo item in items)
                 {
+                    if (item == null) continue;
                     string n = APItemLocationDatabase.GetItemName(item.ItemId);
                     if (n == null) continue;
                     NameCounts[n] = NameCounts.TryGetValue(n, out int c) ? c + 1 : 1;
                 }
-                _countedList = CachedItems;
-                _countedTotal = CachedItems.Count;
+                _countedList = items;
             }
 
             return NameCounts.TryGetValue(name, out int count) ? count : 0;

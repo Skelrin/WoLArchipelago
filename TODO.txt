@@ -1,5 +1,4 @@
-- Update NPC slots unlock only if player have correct token (place relics or arcanas on empty slots)
-- Save host, port, slotname to prevent retyping them
+- Add explanation on how to remove relics in relic chest UI
 - Allow random drop of arcanas and/or relics from killed mobs inside the dungeon
 - Implement deathlink
 - Add more options to the yaml

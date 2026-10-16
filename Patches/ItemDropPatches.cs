@@ -54,18 +54,34 @@ namespace WoLArchipelago.Patches
         /// </summary>
         private static bool TryMakeRoomForPickup(Player player, ItemDrop itemDrop, bool playAudioOnError)
         {
-            if (player == null || itemDrop == null || player.inventory.ContainsItem(itemDrop.itemID))
-            {
+            if (itemDrop == null) return true;
+
+            bool canPickUp = TryMakeRoomForPickup(player, itemDrop.itemID);
+
+            if (!canPickUp && playAudioOnError)
+                SoundManager.PlayErrorAudio();
+
+            return canPickUp;
+        }
+
+        public static bool TryMakeRoomForPickup(Player player, string itemID)
+        {
+            if (player == null || player.inventory.ContainsItem(itemID))
                 return true;
-            }
 
             int maxAllowedRelics = 1 + ItemHandler.GetItemCountByName("Relic Slot Upgrade");
 
-            if (player.inventory.Count < maxAllowedRelics || IsItemGroupable(player, itemDrop.itemID))
-            {
+            if (player.inventory.Count < maxAllowedRelics || IsItemGroupable(player, itemID))
                 return true;
-            }
 
+            return TryDropNonCursedRelic(player);
+        }
+
+        /// <summary>
+        /// Drops one non-cursed relic (standalone first, grouped as fallback) to free a slot.
+        /// </summary>
+        public static bool TryDropNonCursedRelic(Player player)
+        {
             string itemToDrop = null;
             string groupToDrop = null;
 
@@ -76,7 +92,7 @@ namespace WoLArchipelago.Patches
 
                 if (kvp.Value.isGroupItem)
                 {
-                    if (groupToDrop == null) groupToDrop = kvp.Key;
+                    groupToDrop ??= kvp.Key;
                 }
                 else
                 {
@@ -85,20 +101,8 @@ namespace WoLArchipelago.Patches
                 }
             }
 
-            if (itemToDrop == null)
-                itemToDrop = groupToDrop;
-
-            if (itemToDrop != null && player.inventory.DropItem(itemToDrop))
-            {
-                return true;
-            }
-
-            if (playAudioOnError)
-            {
-                SoundManager.PlayErrorAudio();
-            }
-
-            return false;
+            itemToDrop ??= groupToDrop;
+            return itemToDrop != null && player.inventory.DropItem(itemToDrop);
         }
 
         /// <summary>

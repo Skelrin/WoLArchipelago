@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using WoLArchipelago.Patches;
 
 namespace WoLArchipelago.Services
 {
@@ -16,6 +17,7 @@ namespace WoLArchipelago.Services
         private const float MobSpawnRadius = 1.5f;
         private const float MinCooldown = 10f;
         private const float MaxCooldown = 60f;
+        private const int MaxRelicSlots = 12;
 
         private static float _nextTrapTime;
 
@@ -89,14 +91,26 @@ namespace WoLArchipelago.Services
 
         private static void CursedTrap(Player player)
         {
-            List<string> pool = ItemHandler.CursedItemIDs;
-            if (pool.Count > 0)
+            string cursedId = PickRandomUnownedCursed(player);
+
+            if (cursedId != null)
             {
-                player.inventory.AddItem(pool[Random.Range(0, pool.Count)], showNotice: true);
+                bool needsSlot = !ItemDropPatches.IsItemGroupable(player, cursedId);
+
+                if (needsSlot
+                    && player.inventory.Count >= MaxRelicSlots
+                    && !ItemDropPatches.TryDropNonCursedRelic(player))
+                {
+                    cursedId = null;
+                }
+
+                if (cursedId != null)
+                {
+                    player.inventory.AddItem(cursedId, showNotice: true);
+                }
             }
 
             if (player.health == null) return;
-            
             player.health.CurrentHealthValue = Mathf.Max(1, player.health.CurrentHealthValue - CursedDamage);
         }
 
@@ -127,6 +141,27 @@ namespace WoLArchipelago.Services
                 Player.goldWallet.balance = 0;
             }
             GameUI.BroadcastNoticeMessage("Oops what happened to your gold ?", 2f);
+        }
+
+        /// <summary>
+        /// Random pick among cursed items the player doesn't own yet.
+        /// </summary>
+        private static string PickRandomUnownedCursed(Player player)
+        {
+            string picked = null;
+            int seen = 0;
+
+            foreach (string id in ItemHandler.CursedItemIDs)
+            {
+                if (player.inventory.ContainsItem(id)) continue;
+
+                seen++;
+                if (Random.Range(0, seen) == 0)
+                {
+                    picked = id;
+                }
+            }
+            return picked;
         }
     }
 }

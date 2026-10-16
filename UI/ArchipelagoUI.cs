@@ -1,3 +1,4 @@
+using BepInEx.Configuration;
 using UnityEngine;
 
 namespace WoLArchipelago
@@ -11,15 +12,31 @@ namespace WoLArchipelago
 
         private bool _showUI;
         private Rect _windowRect = new(40f, 40f, 350f, 300f);
-        private string _uiHost = "archipelago.gg";
-        private string _uiPort = "";
-        private string _uiSlot = "";
-        private string _uiPassword = "";
+        private string _uiHost;
+        private string _uiPort;
+        private string _uiSlot;
+        private string _uiPassword;
         private bool _hasConnectedOnce;
+
+        private ConfigEntry<string> _cfgHost;
+        private ConfigEntry<int> _cfgPort;
+        private ConfigEntry<string> _cfgSlot;
+        private ConfigEntry<string> _cfgPassword;
 
         private void Awake()
         {
             Instance = this;
+
+            ConfigFile cfg = Plugin.Instance.Config;
+            _cfgHost = cfg.Bind("Connection", "Host", "archipelago.gg", "Last used Archipelago host.");
+            _cfgPort = cfg.Bind("Connection", "Port", 0, "Last used Archipelago port.");
+            _cfgSlot = cfg.Bind("Connection", "SlotName", "", "Last used slot name.");
+            _cfgPassword = cfg.Bind("Connection", "Password", "", "Last used password (stored in plain text).");
+
+            _uiHost = _cfgHost.Value;
+            _uiPort = _cfgPort.Value > 0 ? _cfgPort.Value.ToString() : "";
+            _uiSlot = _cfgSlot.Value;
+            _uiPassword = _cfgPassword.Value;
         }
 
         public void Update()
@@ -43,6 +60,14 @@ namespace WoLArchipelago
         public void Hide()
         {
             _showUI = false;
+        }
+
+        private void SaveConnection(int port)
+        {
+            _cfgHost.Value = _uiHost;
+            _cfgPort.Value = port;
+            _cfgSlot.Value = _uiSlot;
+            _cfgPassword.Value = _uiPassword;
         }
 
         private void OnGUI()
@@ -99,6 +124,7 @@ namespace WoLArchipelago
                 {
                     if (int.TryParse(_uiPort, out int port))
                     {
+                        SaveConnection(port);
                         Plugin.AP.Connect(_uiHost, port, _uiSlot, _uiPassword, isReconnecting: _hasConnectedOnce);
                     }
                     else

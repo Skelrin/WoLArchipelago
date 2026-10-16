@@ -22,6 +22,11 @@ namespace WoLArchipelago.Services
             return Mathf.Min(ItemHandler.GetTotalShopUpgrade() * 16, 64);
         }
 
+        public static bool IsAPShopItem(GameObject gameObject)
+        {
+            return gameObject.GetComponent<APShopSlot>() != null;
+        }
+
         /// <summary>
         /// Iterates through shop slots to find the next available, unchecked Archipelago location.
         /// </summary>
