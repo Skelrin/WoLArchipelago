@@ -10,7 +10,7 @@ An **Archipelago MultiWorld** integration mod for **Wizard of Legend**. This mod
 
 * **Locked Skill Slots**: Standard, Signature, and Bonus Arcana slots are locked by default and can be unlocked via MultiWorld items.
 * **Element Licenses**: Option to lock elements (Fire, Water, Earth, Air, Lightning), requiring an Element License to equip/use corresponding spells.
-* **488 Location Checks**: Includes bosses, minibosses, chest milestones, elemental kills, NPC interactions, spawn shop inventory, and gameplay milestones.
+* **Over 300 Location Checks**: Includes bosses, minibosses, chest milestones, elemental kills, NPC interactions, shops, and gameplay milestones.
 * **Dynamic UI**: In-game HUD, SpellBook, and shop interfaces dynamically update based on unlocked slots and permissions.
 
 ## Setup & Installation
@@ -35,6 +35,7 @@ The repository contains the Python `.apworld` implementation inside the `wizardo
 * **`chaos_fragments_total`**: Total number of Chaos Fragments placed in the item pool (default: `10`).
 * **`starting_arcana_mode`**: Choose whether starting Arcana slots are vanilla or randomized (`0` = Vanilla, `1` = Randomize).
 * **`element_licenses_mode`**: Enable or disable Element License requirements (`0` = Disabled, `1` = Required).
+* **`perfect_boss_locations`**: Enable or disable Perfect elemental bosses checks (`0` = Disabled, `1` = Required).
 
 For full details on options and logic, check **[en_WizardOfLegend.md](wizardoflegend/docs/en_WizardOfLegend.md)**.
 
@@ -68,9 +69,6 @@ For full details on options and logic, check **[en_WizardOfLegend.md](wizardofle
 ├── UI/                 # Custom UI components
 │   ├── ArchipelagoUI.cs           # Connection popup window (F1 menu)
 │   └── Sprites/                   # AP branded graphical assets
-│
-├── Utilities/          # Helper utilities
-│   └── TlsProxyServer.cs          # Network TLS workaround for Unity/AP client
 │
 ├── wizardoflegend/     # Archipelago Python World (.apworld)
 │   ├── docs/                      # Documentation for Archipelago
@@ -131,7 +129,7 @@ To build the Archipelago world file:
 ---
 
 ### AI Disclosure
-- AI assistance was used for learning BepInEx/Harmony modding patterns, setting up the TLS 1.2/1.3 proxy (should be removed in future update if possible), and supporting code refactoring. The vast majority of the codebase was authored by hand..
+- AI assistance was used for learning BepInEx/Harmony modding patterns and supporting code refactoring. The vast majority of the codebase was authored by hand..
 
 ## License
 
