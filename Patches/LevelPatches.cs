@@ -125,6 +125,8 @@ namespace WoLArchipelago.Patches
                 }
                 // We save data when changing level in case of game crash
                 DataManager.SaveData();
+
+                PerfectFightHelper.ResetFight();
             }
         }
 

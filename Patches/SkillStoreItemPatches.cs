@@ -13,13 +13,14 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(nameof(SkillStoreItem.Start))]
         public static void StartPostfix(SkillStoreItem __instance)
         {
-            string SlotFormat = "Arcana Shop Slot {0}";
-
             if (__instance.isShufflerItem) return;
 
-            if (!ShopService.TryGetNextLocation(SlotFormat, ShopService.GetMaxShopSlots(), out long locId, out string locName))
+            if (!ShopService.TryGetNextLocation("Arcana Shop Slot {0}", ShopService.GetMaxShopSlots(), out long locId, out string locName))
             {
-                ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
+                if (__instance.usePlatinumCost)
+                {
+                    ShopService.DestroyShopItem(__instance.gameObject, __instance.priceMarker);
+                }
                 return;
             }
 
@@ -53,7 +54,7 @@ namespace WoLArchipelago.Patches
         [HarmonyPatch(nameof(SkillStoreItem.Buy))]
         public static bool BuyPrefix(SkillStoreItem __instance)
         {
-            if (__instance.isShufflerItem) return true;
+            if (__instance.isShufflerItem || !ShopService.IsAPShopItem(__instance.gameObject)) return true;
 
             return ShopService.ProcessPurchase(
                 __instance.gameObject,

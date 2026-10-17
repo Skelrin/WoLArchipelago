@@ -1,9 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Archipelago.MultiClient.Net.Models;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace WoLArchipelago.Services
 {
@@ -12,17 +11,40 @@ namespace WoLArchipelago.Services
     /// </summary>
     public static class ItemHandler
     {
-        public static List<ItemInfo> CachedItems { get; set; }
+        private const int MaxBossKeys = 3;
+        private const int MaxShopUpgrades = 4;
+        private const int ChaosGemsPerPack = 100;
+        private const int GoldPerPack = 200;
+        private const int HPPerBoost = 50;
+        private const int HealOrbCount = 3;
+        private const int ItemsPerBundle = 2;
+        private const string TokenPrefix = "Token";
+
+        private static volatile List<ItemInfo> _cachedItems = [];
+        private static volatile HashSet<long> _unlockedIds = [];
 
         private static List<string> _cachedCursedItemIDs;
         private static string[] _cachedEnemyNames;
 
-        static ItemHandler()
+        private static readonly Dictionary<string, int> NameCounts = [];
+        private static List<ItemInfo> _countedList;
+        
+        public static List<ItemInfo> CachedItems
         {
-            CachedItems = [];
+            get => _cachedItems;
+            set
+            {
+                List<ItemInfo> list = value ?? [];
+                HashSet<long> ids = [];
+                foreach (ItemInfo it in list)
+                    if (it != null) ids.Add(it.ItemId);
+
+                _unlockedIds = ids;
+                _cachedItems = list;
+            }
         }
 
-        private static List<string> CursedItemIDs
+        public static List<string> CursedItemIDs
         {
             get
             {
@@ -44,66 +66,62 @@ namespace WoLArchipelago.Services
             }
         }
 
-        private static string[] EnemyNames
+        public static string[] EnemyNames => 
+            _cachedEnemyNames is { Length: > 0 } ? _cachedEnemyNames : (_cachedEnemyNames = Enum.GetNames(typeof(Enemy.EName)));
+
+        public static bool IsPlayerDead(Player player)
         {
-            get
-            {
-                if (_cachedEnemyNames == null || _cachedEnemyNames.Length == 0)
-                {
-                    _cachedEnemyNames = Enum.GetNames(typeof(Enemy.EName));
-                }
-                return _cachedEnemyNames;
-            }
+            if (player == null) return true;
+            if (player.health != null && player.health.CurrentHealthValue <= 0) return true;
+            return player.fsm != null && player.fsm.currentStateName.Contains("Dead");
         }
 
-        public static Player GetActivePlayer(bool mustBeAlive)
+        public static Player GetActivePlayer(bool mustBeAlive = false)
         {
             var players = GameController.activePlayers;
             if (players == null) return null;
 
-            for (int i = 0; i < players.Count(); i++)
+            foreach (Player player in players)
             {
-                Player p = players[i];
-                if (p == null) continue;
-                if (mustBeAlive && p.fsm != null && p.fsm.currentStateName.Contains("Dead")) continue;
-                return p;
+                if (player == null) continue;
+                if (mustBeAlive && IsPlayerDead(player)) continue;
+                return player;
             }
             return null;
         }
 
-        public static Player GetActivePlayer()
-        {
-            return GetActivePlayer(false);
-        }
-
-        public static bool IsItemUnlocked(long itemId)
-        {
-            return CachedItems != null && CachedItems.Exists(item => item.ItemId == itemId);
-        }
+        public static bool IsItemUnlocked(long itemId) => _unlockedIds.Contains(itemId);
 
         public static int GetItemCountByName(string name)
         {
-            int count = 0;
-            int total = CachedItems.Count;
-            for (int i = 0; i < total; i++)
+            List<ItemInfo> items = _cachedItems;
+            if (items == null) return 0;
+
+            if (!ReferenceEquals(_countedList, items))
             {
-                if (APItemLocationDatabase.GetItemName(CachedItems[i].ItemId) == name)
+                NameCounts.Clear();
+                foreach (ItemInfo item in items)
                 {
-                    count++;
+                    if (item == null) continue;
+                    string n = APItemLocationDatabase.GetItemName(item.ItemId);
+                    if (n == null) continue;
+                    NameCounts[n] = NameCounts.TryGetValue(n, out int c) ? c + 1 : 1;
                 }
+                _countedList = items;
             }
-            return count;
+
+            return NameCounts.TryGetValue(name, out int count) ? count : 0;
         }
 
-        public static int GetTotalBossKeys() { return GetItemCountByName("Boss Key"); }
-        public static int GetTotalChaosFragment() { return GetItemCountByName("Chaos Fragment"); }
-        public static int GetTotalShopUpgrade() { return GetItemCountByName("Shop Upgrade"); }
+        public static int GetTotalBossKeys() => GetItemCountByName("Boss Key");
+        public static int GetTotalChaosFragment() => GetItemCountByName("Chaos Fragment");
+        public static int GetTotalShopUpgrade() => GetItemCountByName("Shop Upgrade");
 
         public static bool CanAccessBossStage(int tierCount, int stageCount)
         {
             if (stageCount == 2 && tierCount >= 0 && tierCount <= 2)
             {
-                return GetTotalBossKeys() >= (tierCount + 1);
+                return GetTotalBossKeys() >= tierCount + 1;
             }
             return true;
         }
@@ -120,11 +138,8 @@ namespace WoLArchipelago.Services
         {
             if (player?.health == null) return;
 
-            int hpBoostCount = GetItemCountByName("Max HP Boost");
-            int totalBonusHP = hpBoostCount * 50;
-
-            NumVarStatMod hpMod = new("AP_MaxHP_Mod", totalBonusHP);
-            player.health.healthStat.AddMod(hpMod);
+            int totalBonusHP = GetItemCountByName("Max HP Boost") * HPPerBoost;
+            player.health.healthStat.AddMod(new NumVarStatMod("AP_MaxHP_Mod", totalBonusHP));
 
             if (restoreAllHP)
             {
@@ -135,189 +150,128 @@ namespace WoLArchipelago.Services
         public static void ProcessHPBoostItem()
         {
             Player player = GetActivePlayer();
-            if (player?.health != null)
+            if (player?.health == null) return;
+
+            float maxHpBefore = player.health.healthStat.ModifiedValue;
+            SyncPlayerMaxHP(player, false);
+            int actualHpGain = Mathf.RoundToInt(player.health.healthStat.ModifiedValue - maxHpBefore);
+
+            if (actualHpGain > 0)
             {
-                float maxHpBefore = player.health.healthStat.ModifiedValue;
-
-                SyncPlayerMaxHP(player, false);
-
-                float maxHpAfter = player.health.healthStat.ModifiedValue;
-                int actualHpGain = Mathf.RoundToInt(maxHpAfter - maxHpBefore);
-
-                if (actualHpGain > 0)
-                {
-                    player.health.RestoreHealth(actualHpGain, showDisplayText: true, playSound: true);
-                }
-
-                GameUI.BroadcastNoticeMessage("Max HP Boost Received!");
+                player.health.RestoreHealth(actualHpGain, showDisplayText: true, playSound: true);
             }
+
+            GameUI.BroadcastNoticeMessage("Max HP Boost Received!");
         }
 
-        public static void TriggerCursedTrap()
+        private static List<string> PickRandom(List<string> pool, int count)
         {
-            Plugin.Instance.StartCoroutine(CursedTrapCoroutine());
+            int n = Math.Min(count, pool.Count);
+            for (int i = 0; i < n; i++)
+            {
+                int j = Random.Range(i, pool.Count);
+                string tmp = pool[i];
+                pool[i] = pool[j];
+                pool[j] = tmp;
+            }
+            return pool.GetRange(0, n);
         }
 
-        private static IEnumerator CursedTrapCoroutine()
-        {
-            Player player = GetActivePlayer(true);
-            if (player == null || !GameController.inGameScene)
-            {
-                yield break;
-            }
+        private static bool IsNpcToken(string itemId) => itemId.StartsWith(TokenPrefix, StringComparison.Ordinal);
 
-            GameUI.BroadcastNoticeMessage("You've been caught in a trap!", 2f);
-            SoundManager.PlayAudio("BuyCursedRelic");
-            yield return new WaitForSeconds(2f);
-
-            for (int i = 5; i > 0; i--)
-            {
-                GameUI.BroadcastNoticeMessage(string.Format("Trap triggering in {0}...", i));
-                yield return new WaitForSeconds(1f);
-
-                if (GetActivePlayer(true) == null || !GameController.inGameScene)
-                {
-                    yield break;
-                }
-            }
-
-            player = GetActivePlayer(true);
-            if (player == null) yield break;
-
-            // 50% chance to force-add a cursed relic or spawns an enemy wave on failure/full inventory
-            if (UnityEngine.Random.value < 0.5f && !player.inventory.IsFull)
-            {
-                List<string> cursedPool = CursedItemIDs;
-                if (cursedPool.Count > 0)
-                {
-                    string randomCursedID = cursedPool[UnityEngine.Random.Range(0, cursedPool.Count)];
-                    player.inventory.AddItem(randomCursedID, showNotice: true);
-
-                    if (player.health != null)
-                    {
-                        int targetHealth = Mathf.Max(1, player.health.CurrentHealthValue - 100);
-                        player.health.CurrentHealthValue = targetHealth;
-                    }
-                    yield break;
-                }
-            }
-
-            SpawnRandomEnemy(player.transform.position);
-        }
-
-        private static void SpawnRandomEnemy(Vector3 position)
-        {
-            string[] enemies = EnemyNames;
-            if (enemies.Length == 0) return;
-
-            int mobCount = UnityEngine.Random.Range(3, 9);
-
-            for (int i = 0; i < mobCount; i++)
-            {
-                string randomEnemy = enemies[UnityEngine.Random.Range(0, enemies.Length)];
-
-                Vector2 offset = UnityEngine.Random.insideUnitCircle * 1.5f;
-                Vector3 spawnPosition = position + new Vector3(offset.x, 0f, offset.y);
-
-                DebugMenu.SpawnEnemy(randomEnemy, spawnPosition);
-            }
-        }
-
+        /// <summary>
+        /// Unlock 2 relics of a specific tier and drop them in player is inside the dungeon.
+        /// </summary>
         private static void GenerateRandomRelic(int relicTier)
         {
-            if (!LootManager.itemTierDict.TryGetValue(relicTier - 1, out List<string> relicPool) || relicPool == null)
+            if (!LootManager.itemTierDict.TryGetValue(relicTier - 1, out List<string> pool) || pool == null)
             {
-                Plugin.Log.LogError(string.Format("[AP] No relics found for tier {0}.", relicTier));
+                Plugin.Log.LogError($"[AP] No relics found for tier {relicTier}.");
                 return;
             }
 
-            List<string> availableRelics = [];
-            for (int i = 0; i < relicPool.Count; i++)
+            List<string> available = pool.FindAll(r => !IsNpcToken(r) && !Item.IsUnlocked(r));
+            if (available.Count == 0)
             {
-                string relic = relicPool[i];
-                if (!Item.IsUnlocked(relic))
-                {
-                    availableRelics.Add(relic);
-                }
-            }
-
-            if (availableRelics.Count == 0)
-            {
-                GameUI.BroadcastNoticeMessage(string.Format("All relics in tier {0} are already unlocked!", relicTier));
+                GameUI.BroadcastNoticeMessage($"All relics in tier {relicTier} are already unlocked!");
                 return;
             }
 
-            string selectedRelic = availableRelics[UnityEngine.Random.Range(0, availableRelics.Count)];
+            List<string> picked = PickRandom(available, ItemsPerBundle);
 
-            Item.IsUnlocked(selectedRelic, true);
-            GameUI.BroadcastNoticeMessage(string.Format("Unlocked {0} relic", TextManager.GetItemName(selectedRelic)));
+            foreach (string relic in picked)
+            {
+                Item.IsUnlocked(relic, true);
+            }
+
+            string names = string.Join(", ", [.. picked.ConvertAll(TextManager.GetItemName)]);
+            GameUI.BroadcastNoticeMessage($"Unlocked {names} relic{(picked.Count > 1 ? "s" : "")}",5f);
 
             Player player = GetActivePlayer(true);
             if (player != null && GameController.inGameScene)
             {
-                LootManager.DropItem(player.transform.position, 1, selectedRelic, false, 0);
+                foreach (string relic in picked)
+                {
+                    LootManager.DropItem(player.transform.position, 1, relic, false, 0);
+                }
                 SoundManager.PlayAudio("DropItem");
             }
         }
 
-        private static bool IsSkillUnlocked(Player player, string skillName)
-        {
-            if (player == null || player.skillStates == null) return false;
-
-            for (int i = 0; i < player.skillStates.Length; i++)
-            {
-                var state = player.skillStates[i];
-                if (state == null) continue;
-
-                if (state.GetType().Name.IndexOf(skillName, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return state.isUnlocked;
-                }
-            }
-
-            return false;
-        }
-
+        /// <summary>
+        /// Unlock 2 arcanas (signature variant as well if it's a standard arcana unlocked) of a specific tier
+        /// and drop them in player is inside the dungeon.
+        /// </summary>
         private static void GenerateRandomSkill(int skillTier)
         {
             Player player = GetActivePlayer(true);
             if (player == null) return;
 
-            if (!LootManager.skillTierDict.TryGetValue(skillTier - 1, out List<string> arcanaPool) || arcanaPool == null)
+            if (!LootManager.skillTierDict.TryGetValue(skillTier - 1, out List<string> pool) || pool == null)
             {
-                Plugin.Log.LogError(string.Format("[AP] No arcana found for tier {0}.", skillTier));
+                Plugin.Log.LogError($"[AP] No arcana found for tier {skillTier}.");
                 return;
             }
 
-            List<string> availableArcanas = [];
-            for (int i = 0; i < arcanaPool.Count; i++)
+            List<string> available = pool.FindAll(a => !IsSkillUnlocked(player, a));
+            if (available.Count == 0)
             {
-                string arcana = arcanaPool[i];
-                if (!IsSkillUnlocked(player, arcana))
-                {
-                    availableArcanas.Add(arcana);
-                }
-            }
-
-            if (availableArcanas.Count == 0)
-            {
-                GameUI.BroadcastNoticeMessage(string.Format("All arcanas in tier {0} are already unlocked!", skillTier));
+                GameUI.BroadcastNoticeMessage($"All arcanas in tier {skillTier} are already unlocked!");
                 return;
             }
 
-            string selectedArcana = availableArcanas[UnityEngine.Random.Range(0, availableArcanas.Count)];
+            List<string> picked = PickRandom(available, ItemsPerBundle);
 
-            player.HandleSkillUnlock(selectedArcana, true);
-
-            if (GameController.inGameScene)
+            foreach (string arcana in picked)
             {
-                ItemSpawner itemSpawner = GameController.itemSpawner ?? ItemSpawner.Instance;
-                if (itemSpawner != null)
+                player.HandleSkillUnlock(arcana, true);
+            }
+
+            if (!GameController.inGameScene) return;
+
+            ItemSpawner spawner = GameController.itemSpawner ?? ItemSpawner.Instance;
+            if (spawner != null)
+            {
+                foreach (string arcana in picked)
                 {
-                    itemSpawner.SpawnItem(ItemSpawner.PoolType.SkillDrop, player.transform.position, true, 1.5f, selectedArcana);
-                    SoundManager.PlayAudio("DropSpell");
+                    spawner.SpawnItem(ItemSpawner.PoolType.SkillDrop, player.transform.position, true, 1.5f, arcana);
+                }
+                SoundManager.PlayAudio("DropSpell");
+            }
+        }
+
+        private static bool IsSkillUnlocked(Player player, string skillName)
+        {
+            if (player.skillStates == null) return false;
+
+            foreach (var state in player.skillStates)
+            {
+                if (state != null && state.GetType().Name.IndexOf(skillName, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return state.isUnlocked;
                 }
             }
+            return false;
         }
 
         /// <summary>
@@ -326,65 +280,85 @@ namespace WoLArchipelago.Services
         public static void GrantPlayerAPItem(long apItemId)
         {
             string itemName = APItemLocationDatabase.GetItemName(apItemId);
-            Plugin.Log.LogInfo(string.Format("[AP] Processing Item: {0} (ID: {1})", itemName, apItemId));
+            if (itemName == null)
+            {
+                Plugin.Log.LogWarning($"[AP] Unknown item ID: {apItemId}");
+                return;
+            }
+
+            Plugin.Log.LogInfo($"[AP] Processing Item: {itemName} (ID: {apItemId})");
 
             switch (itemName)
             {
                 case "Boss Key":
-                    GameUI.BroadcastNoticeMessage(string.Format("[AP] Boss Key Received! ({0}/3)", GetTotalBossKeys()));
+                    GameUI.BroadcastNoticeMessage($"Boss Key Received! ({GetTotalBossKeys()}/{MaxBossKeys})");
                     return;
                 case "Chaos Fragment":
-                    GameUI.BroadcastNoticeMessage(string.Format("[AP] Chaos Fragment Received! ({0}/{1})", GetTotalChaosFragment(), APManager.ChaosFragmentsRequired));
+                    GameUI.BroadcastNoticeMessage($"Chaos Fragment Received! ({GetTotalChaosFragment()}/{APManager.ChaosFragmentsRequired})");
                     return;
                 case "Shop Upgrade":
-                    GameUI.BroadcastNoticeMessage(string.Format("[AP] Shop Upgrade Received! ({0}/4)", GetTotalShopUpgrade()));
+                    GameUI.BroadcastNoticeMessage($"Shop Upgrade Received! ({GetTotalShopUpgrade()}/{MaxShopUpgrades})");
                     return;
                 case "Chaos Gems Pack":
-                    Player.platWallet?.Deposit(100);
-                    GameUI.BroadcastNoticeMessage("[AP] 100 Chaos Gems Received!");
+                    Player.platWallet?.Deposit(ChaosGemsPerPack);
+                    GameUI.BroadcastNoticeMessage($"{ChaosGemsPerPack} Chaos Gems Received!");
                     return;
                 case "Gold Pack":
-                    Player.goldWallet?.Deposit(200);
-                    GameUI.BroadcastNoticeMessage("[AP] 200 Gold Received!");
+                    Player.goldWallet?.Deposit(GoldPerPack);
+                    GameUI.BroadcastNoticeMessage($"{GoldPerPack} Gold Received!");
+                    return;
+                case "Heal Orb":
+                    Player healTarget = GetActivePlayer(true);
+                    if (healTarget != null)
+                    {
+                        LootManager.DropHealth(healTarget.transform.position, HealOrbCount);
+                    }
+                    GameUI.BroadcastNoticeMessage("Healing Orbs Received!");
                     return;
                 case "Max HP Boost":
                     ProcessHPBoostItem();
-                    return;
-                case "Cursed Trap":
-                    GameUI.BroadcastNoticeMessage("[AP] Cursed Trap Received!");
-                    TriggerCursedTrap();
                     return;
             }
 
             if (itemName.Contains("Outfit"))
             {
-                int colonIndex = itemName.IndexOf(':');
-                string outfit = colonIndex >= 0 ? itemName.Substring(colonIndex + 1).Trim() : itemName;
+                int colon = itemName.IndexOf(':');
+                string outfit = colon >= 0 ? itemName.Substring(colon + 1).Trim() : itemName;
                 Outfit.UnlockOutfit(outfit);
-                GameUI.BroadcastNoticeMessage(string.Format("[AP] Unlocked {0} outfit", TextManager.GetOutfitName(outfit)));
+                GameUI.BroadcastNoticeMessage($"Unlocked {TextManager.GetOutfitName(outfit)} outfit");
             }
-            else if (itemName.Contains("Relic") && TryExtractTier(itemName, out int relicTier))
+            else if (itemName.Contains("Token"))
             {
-                GenerateRandomRelic(relicTier);
-            }
-            else if (itemName.Contains("Arcana") && !itemName.Contains("Bonus") && TryExtractTier(itemName, out int arcanaTier))
-            {
-                GenerateRandomSkill(arcanaTier);
-            }
-            else if (itemName.Contains("Doctor") || itemName.Contains("Heal"))
-            {
-                GameUI.BroadcastNoticeMessage(string.Format("[AP] {0} Received", TextManager.GetItemName(itemName)));
                 Item.IsUnlocked(itemName, true);
-                Player player = GetActivePlayer();
+                GameUI.BroadcastNoticeMessage($"Unlocked {TextManager.GetItemName(itemName)} relic");
+
+                Player player = GetActivePlayer(true);
                 if (player != null && GameController.inGameScene)
                 {
                     LootManager.DropItem(player.transform.position, 1, itemName, false, 0);
                     SoundManager.PlayAudio("DropItem");
                 }
+
+                if (itemName == "TokenCollector")
+                {
+                    Patches.CollectorNpcPatches.RefreshWell();
+                }
+            }
+            else if (itemName.Contains("Relic Bundle") && TryExtractTier(itemName, out int relicTier))
+            {
+                GenerateRandomRelic(relicTier);
+            }
+            else if (itemName.Contains("Arcana Bundle") && TryExtractTier(itemName, out int arcanaTier))
+            {
+                GenerateRandomSkill(arcanaTier);
+            }
+            else if (itemName.Contains("Trap"))
+            {
+                TrapHandler.ApplyTrapOnPlayer(itemName);
             }
             else
             {
-                GameUI.BroadcastNoticeMessage(string.Format("[AP] {0} Received", itemName));
+                GameUI.BroadcastNoticeMessage($"{itemName} Received");
                 GameUI.RefreshCDUI();
             }
         }

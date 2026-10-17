@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -194,6 +195,7 @@ namespace WoLArchipelago.Patches
 
                 ItemHandler.SyncPlayerMaxHP(player, true);
 
+                ResetOutfitEnhancement(player);
                 player.inventory.ClearInventory();
 
                 player.GiveDesignatedItem();
@@ -205,6 +207,48 @@ namespace WoLArchipelago.Patches
                         player.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
                     }
                 }
+            }
+        }
+
+        private static void ResetOutfitEnhancement(Player player)
+        {
+            if (player == null)
+                return;
+
+            try
+            {
+                bool prdFlag = RunData.prdDict.ContainsKey(player.playerID)
+                            && RunData.prdDict[player.playerID] != null
+                            && RunData.prdDict[player.playerID].outFitEnhanced;
+
+                if (!player.outfitEnhanced && !prdFlag)
+                    return;
+
+                Outfit current = player.equippedOutfit;
+                Outfit fresh = Outfit.GetAvailableOutfit(player.outfitID);
+
+                if (current != null)
+                    current.SetEquipStatus(player, false);
+
+                if (fresh != null)
+                {
+                    fresh.SetEquipStatus(player, true);
+                    player.equippedOutfit = fresh;
+                }
+
+                player.outfitEnhanced = false;
+
+                if (RunData.prdDict.ContainsKey(player.playerID) && RunData.prdDict[player.playerID] != null)
+                    RunData.prdDict[player.playerID].outFitEnhanced = false;
+
+                FieldInfo f = typeof(TailorNpc).GetField("playerBuffed", BindingFlags.NonPublic | BindingFlags.Static);
+                bool[] buffed = f != null ? f.GetValue(null) as bool[] : null;
+                if (buffed != null && player.playerID < buffed.Length)
+                    buffed[player.playerID] = false;
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AP] Error resetting outfit enhancement: {ex}");
             }
         }
     }

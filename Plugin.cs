@@ -13,7 +13,7 @@ namespace WoLArchipelago
     {
         public const string PluginGUID = "com.skelrin.wolarchipelago";
         public const string PluginName = "WoL Archipelago";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.1.0";
 
         private static readonly Queue<Action> _mainThreadActions = new();
         private static readonly object _queueLock = new();

@@ -9,7 +9,6 @@ namespace WoLArchipelago.Services
     /// </summary>
     public static class DataManager
     {
-        public static int TotalDashes { get; set; }
         public static int TotalChestsOpened { get; set; }
         public static bool IsStartingInventoryApplied { get; set; }
         public static bool IsGoalCompleted { get; set; }
@@ -30,7 +29,6 @@ namespace WoLArchipelago.Services
         /// </summary>
         public static void LoadData()
         {
-            TotalDashes = 0;
             TotalChestsOpened = 0;
             IsStartingInventoryApplied = false;
             IsGoalCompleted = false;
@@ -63,8 +61,7 @@ namespace WoLArchipelago.Services
 
                     if (int.TryParse(valStr, out int val))
                     {
-                        if (key == "TotalDashes") TotalDashes = val;
-                        else if (key == "TotalChestsOpened") TotalChestsOpened = val;
+                        if (key == "TotalChestsOpened") TotalChestsOpened = val;
                         else if (key.StartsWith("Chest_")) ChestCounts[key.Substring(6)] = val;
                         else if (key.StartsWith("Enemy_")) EnemyCounts[key.Substring(6)] = val;
                     }
@@ -98,7 +95,6 @@ namespace WoLArchipelago.Services
             {
                 List<string> lines =
                 [
-                    string.Format("TotalDashes={0}", TotalDashes),
                     string.Format("TotalChestsOpened={0}", TotalChestsOpened),
                     string.Format("IsStartingInventoryApplied={0}", IsStartingInventoryApplied),
                     string.Format("IsGoalCompleted={0}", IsGoalCompleted),
