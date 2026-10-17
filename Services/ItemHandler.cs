@@ -69,16 +69,23 @@ namespace WoLArchipelago.Services
         public static string[] EnemyNames => 
             _cachedEnemyNames is { Length: > 0 } ? _cachedEnemyNames : (_cachedEnemyNames = Enum.GetNames(typeof(Enemy.EName)));
 
+        public static bool IsPlayerDead(Player player)
+        {
+            if (player == null) return true;
+            if (player.health != null && player.health.CurrentHealthValue <= 0) return true;
+            return player.fsm != null && player.fsm.currentStateName.Contains("Dead");
+        }
+
         public static Player GetActivePlayer(bool mustBeAlive = false)
         {
             var players = GameController.activePlayers;
             if (players == null) return null;
 
-            foreach (Player p in players)
+            foreach (Player player in players)
             {
-                if (p == null) continue;
-                if (mustBeAlive && p.fsm != null && p.fsm.currentStateName.Contains("Dead")) continue;
-                return p;
+                if (player == null) continue;
+                if (mustBeAlive && IsPlayerDead(player)) continue;
+                return player;
             }
             return null;
         }
@@ -330,6 +337,11 @@ namespace WoLArchipelago.Services
                 {
                     LootManager.DropItem(player.transform.position, 1, itemName, false, 0);
                     SoundManager.PlayAudio("DropItem");
+                }
+
+                if (itemName == "TokenCollector")
+                {
+                    Patches.CollectorNpcPatches.RefreshWell();
                 }
             }
             else if (itemName.Contains("Relic Bundle") && TryExtractTier(itemName, out int relicTier))

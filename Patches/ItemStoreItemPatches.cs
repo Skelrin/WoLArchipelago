@@ -23,7 +23,7 @@ namespace WoLArchipelago.Patches
             if (__instance.cursedOnly)
             {
                 slotFormat = "Nox the Unfortunate Slot {0}";
-                maxSlots = 40;
+                maxSlots = 20;
             }
             else
             {

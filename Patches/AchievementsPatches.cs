@@ -51,6 +51,14 @@ namespace WoLArchipelago.Patches
 
         public static int[] MiniBossStartHealth;
 
+        public static bool PlayerDied;
+
+        public static void ResetFight()
+        {
+            PlayerDied = false;
+            MiniBossStartHealth = null;
+        }
+
         public static int[] Snapshot()
         {
             Player[] players = GameController.activePlayers;
@@ -67,6 +75,8 @@ namespace WoLArchipelago.Patches
 
         public static bool IsPerfect(int[] start)
         {
+            if (PlayerDied) return false;
+
             Player[] players = GameController.activePlayers;
             if (start == null || start.Length == 0 || players == null || players.Length == 0) return false;
 
@@ -74,6 +84,9 @@ namespace WoLArchipelago.Patches
             foreach (Player p in players)
             {
                 if (p == null || p.health == null) continue;
+
+                if (ItemHandler.IsPlayerDead(p)) return false;
+
                 hasValidPlayer = true;
                 if (p.playerID < start.Length && p.health.CurrentHealthValue < start[p.playerID])
                     return false;

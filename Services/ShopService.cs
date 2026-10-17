@@ -19,7 +19,7 @@ namespace WoLArchipelago.Services
 
         public static int GetMaxShopSlots()
         {
-            return Mathf.Min(ItemHandler.GetTotalShopUpgrade() * 16, 64);
+            return Mathf.Min(ItemHandler.GetTotalShopUpgrade() * 8, 32);
         }
 
         public static bool IsAPShopItem(GameObject gameObject)
