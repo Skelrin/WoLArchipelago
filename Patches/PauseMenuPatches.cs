@@ -170,16 +170,11 @@ namespace WoLArchipelago.Patches
             private static void TeleportToHub()
             {
                 GameDataManager.Save();
-
                 Level.isBossRushMode = false;
                 Level.removeAllPits = false;
                 Level.resetUsedRooms = true;
                 HealStoreItem.healBuyCount = 0;
                 SkillStoreItem.empoweredBuyCount = 0;
-                if (Player.goldWallet != null)
-                {
-                    Player.goldWallet.balance = 0;
-                }
                 HubEventHandler.cursePurchased = false;
                 GameController.stageCount = 0;
                 GameController.tierCount = 0;
@@ -190,31 +185,54 @@ namespace WoLArchipelago.Patches
                 GameController.resetHubVars = true;
 
                 GameController.LoadLevel("Hub");
-
-                Player player = ItemHandler.GetActivePlayer();
-
-                ItemHandler.SyncPlayerMaxHP(player, true);
-
-                ResetOutfitEnhancement(player);
-                player.inventory.ClearInventory();
-
-                player.GiveDesignatedItem();
-
-                foreach (string relicId in DataManager.SavedHubRelics)
-                {
-                    if (relicId != player.designatedItemID && !player.inventory.ContainsItem(relicId))
-                    {
-                        player.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
-                    }
-                }
+                
+                ResetPlayer();
             }
+        }
+
+        private static void ResetPlayer()
+        {
+            Player player = ItemHandler.GetActivePlayer();
+            if (player == null)
+                return;
+
+            if (Player.goldWallet != null)
+                Player.goldWallet.balance = 0;
+
+            if (Player.goldDebtWallet != null)
+                Player.goldDebtWallet.balance = 0;
+
+            player.playerData = GameDataManager.gameData.GetPlayerData(player.playerID);
+
+            foreach (Player.SkillState state in player.skillsDict.Values)
+            {
+                if (state == null) continue;
+                state.SetSkillLevel(1);
+                state.isUltimate = false;
+                state.isSignature = false;
+                state.SetEmpowered(false, EmpowerStatMods.DefaultEmpowerMod);
+            }
+            player.stockSkill = null;
+
+            player.InitSkills();
+
+            ResetOutfitEnhancement(player);
+            if (!player.EquipOutfit(player.playerData.outfitName))
+                player.EquipOutfit("default");
+
+            player.inventory.ClearInventory();
+            player.GiveDesignatedItem(string.Empty);
+
+            foreach (string relicId in DataManager.SavedHubRelics)
+            {
+                if (relicId != player.designatedItemID && !player.inventory.ContainsItem(relicId))
+                    player.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
+            }
+            ItemHandler.SyncPlayerMaxHP(player, true);
         }
 
         private static void ResetOutfitEnhancement(Player player)
         {
-            if (player == null)
-                return;
-
             try
             {
                 bool prdFlag = RunData.prdDict.ContainsKey(player.playerID)
