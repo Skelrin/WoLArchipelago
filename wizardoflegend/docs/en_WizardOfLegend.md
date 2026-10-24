@@ -10,7 +10,7 @@ Wizard of Legend is a fast-paced action roguelike focused on spell-slinging comb
 * **Arcana Slots & Relics**: Your ability slots (Standard Arcana, Signature Arcana, and Bonus Slots) and Relic slots are locked initially and must be unlocked via MultiWorld progression items.
 * **Element Licenses**: If enabled, picking up or using Arcana of specific elements (Fire, Water, Earth, Air, Lightning) requires finding the corresponding Element License.
 * **Dungeon Access & Biomes**: Stage progression requires finding **Boss Keys**, while accessing elemental chests and specific elemental enemies requires **Biome Keys**.
-* **Shops & NPCs**: Spawn shops (Outfit, Relic, Arcana) require **Shop Upgrades** to open and unlock higher inventory tiers. NPCs inside the dungeon require their **Tokens** to be able to interact with them.
+* **Shops & NPCs**: Spawn shops (Outfit, Relic, Arcana) require **Shop Upgrades** to open and unlock higher inventory tiers. NPCs inside the dungeon require their **Tokens** to be unlocked to be able to interact with them.
 
 ## What is the goal of Wizard of Legend?
 
@@ -37,7 +37,7 @@ Locations are categorized as follows:
 * **Enemies**: Kill count milestones (25 or 50 kills) for standard and elemental enemies.
 * **Chests & Milestones**: Opening elemental, miniboss, and boss chests, plus total chest milestones (10, 25, 50, 75, 100 chests opened).
 * **Spawn Shops & NPCs**: Purchasing items from Outfit, Relic, and Arcana shops in town, plus interacting with dungeon NPCs (Doctor Song, Savile, Nox, Nocturne, Cremire, Doki, Time Keeper).
-* **Progression & Gameplay Milestones**: Stage clear milestones, breaking paintings, accumulating gold, and perfecting a boss.
+* **Progression & Gameplay Milestones**: Stage clear milestones, breaking paintings, accumulating gold, and perfecting a miniboss/boss.
 
 ## Is Archipelago integrated into the game UI?
 
