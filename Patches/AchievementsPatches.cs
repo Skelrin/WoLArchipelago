@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HarmonyLib;
 using WoLArchipelago.Services;
 
@@ -17,40 +18,80 @@ namespace WoLArchipelago.Patches
     }
 
     /// <summary>
-    /// Patch to monitor boss fights to trigger the "Perfect a boss" location check if no player takes damage.
+    /// Patch to monitor boss fights to trigger the "Perfect boss" location check if no player takes damage.
     /// </summary>
-    [HarmonyPatch(typeof(BossRoomEventHandler), nameof(BossRoomEventHandler.CheckForPerfectFight))]
+        [HarmonyPatch(typeof(BossRoomEventHandler), nameof(BossRoomEventHandler.CheckForPerfectFight))]
     public static class BossRoomEventHandlerPatches
     {
         [HarmonyPostfix]
-        public static void CheckForPerfectFightPostfix(int[] ___playerStartHealthValues)
+        public static void CheckForPerfectFightPostfix(BossRoomEventHandler __instance, int[] ___playerStartHealthValues)
         {
-            if (___playerStartHealthValues == null || ___playerStartHealthValues.Length == 0) return;
+            if (PerfectFightHelper.IsPerfect(___playerStartHealthValues))
+                CheckHandler.CheckLocation($"Perfect {__instance.bossID}");
+        }
+    }
 
-            Player[] activePlayers = GameController.activePlayers;
-            if (activePlayers == null || activePlayers.Length == 0) return;
+    /// <summary>
+    /// Patch to monitor mini boss fights to trigger the "Perfect miniboss" location check if no player takes damage.
+    /// </summary>
+    [HarmonyPatch(typeof(MiniBossActivationCircle), "Activate")]
+    public static class MiniBossActivationPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix() => PerfectFightHelper.MiniBossStartHealth = PerfectFightHelper.Snapshot();
+    }
+
+    public static class PerfectFightHelper
+    {
+        public static readonly HashSet<string> MiniBosses =
+        [
+            "SuperArcher", "SuperCoffin", "SuperKnight", "SuperLancer",
+            "SuperMage", "SuperRogue", "SuperSummoner"
+        ];
+
+        public static int[] MiniBossStartHealth;
+
+        public static bool PlayerDied;
+
+        public static void ResetFight()
+        {
+            PlayerDied = false;
+            MiniBossStartHealth = null;
+        }
+
+        public static int[] Snapshot()
+        {
+            Player[] players = GameController.activePlayers;
+            if (players == null) return null;
+
+            int[] values = new int[players.Length];
+            foreach (Player p in players)
+            {
+                if (p == null || p.health == null || p.playerID >= values.Length) continue;
+                values[p.playerID] = p.health.CurrentHealthValue;
+            }
+            return values;
+        }
+
+        public static bool IsPerfect(int[] start)
+        {
+            if (PlayerDied) return false;
+
+            Player[] players = GameController.activePlayers;
+            if (start == null || start.Length == 0 || players == null || players.Length == 0) return false;
 
             bool hasValidPlayer = false;
-            bool tookDamage = false;
-
-            foreach (Player player in activePlayers)
+            foreach (Player p in players)
             {
-                if (player == null || player.health == null) continue;
+                if (p == null || p.health == null) continue;
+
+                if (ItemHandler.IsPlayerDead(p)) return false;
 
                 hasValidPlayer = true;
-
-                if (player.playerID < ___playerStartHealthValues.Length &&
-                    player.health.CurrentHealthValue < ___playerStartHealthValues[player.playerID])
-                {
-                    tookDamage = true;
-                    break;
-                }
+                if (p.playerID < start.Length && p.health.CurrentHealthValue < start[p.playerID])
+                    return false;
             }
-
-            if (hasValidPlayer && !tookDamage)
-            {
-                CheckHandler.CheckLocation("Perfect a boss");
-            }
+            return hasValidPlayer;
         }
     }
 
@@ -66,22 +107,6 @@ namespace WoLArchipelago.Patches
             if (Player.goldWallet != null && Player.goldWallet.balance >= 1000)
             {
                 CheckHandler.CheckLocation("Have 1000 gold");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Patch to trigger the "Have 500 chaos gems" location check when chaos gem balance reaches the required threshold when picking up chaos gems.
-    /// </summary>
-    [HarmonyPatch(typeof(Platinum), "OnTriggerStay2D")]
-    public static class PlatinumPatches
-    {
-        [HarmonyPostfix]
-        public static void OnTriggerStay2DPostfix()
-        {
-            if (Player.platWallet != null && Player.platWallet.balance >= 500)
-            {
-                CheckHandler.CheckLocation("Have 500 chaos gems");
             }
         }
     }

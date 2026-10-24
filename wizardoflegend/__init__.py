@@ -1,3 +1,4 @@
+from BaseClasses import ItemClassification
 from worlds.AutoWorld import World
 from .Items import item_table, WoLItem
 from .Locations import location_table
@@ -66,10 +67,18 @@ class WoLWorld(World):
         total_locations = len(self.multiworld.get_unfilled_locations(self.player))
         
         if len(item_pool) < total_locations:
+            filler_item_names = [
+                name for name, data in item_table.items() 
+                if data.classification == ItemClassification.filler
+            ]
             while len(item_pool) < total_locations:
-                item_pool.append(self.create_item("Gold Pack"))
+                filler_name = self.random.choice(filler_item_names)
+                item_pool.append(self.create_item(filler_name))
         elif len(item_pool) > total_locations:
-            removable_item_names = ["Gold Pack", "Relic Tier 1", "Arcana Tier 1"]
+            removable_item_names = [
+                "Cursed Trap", "Mob Trap", "Heal Trap", "Gold Trap",
+                "Relic Tier 1", "Arcana Tier 1"
+            ]
             for target_name in removable_item_names:
                 for i in range(len(item_pool) - 1, -1, -1):
                     if len(item_pool) <= total_locations:

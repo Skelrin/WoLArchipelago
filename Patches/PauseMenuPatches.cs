@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -169,16 +170,11 @@ namespace WoLArchipelago.Patches
             private static void TeleportToHub()
             {
                 GameDataManager.Save();
-
                 Level.isBossRushMode = false;
                 Level.removeAllPits = false;
                 Level.resetUsedRooms = true;
                 HealStoreItem.healBuyCount = 0;
                 SkillStoreItem.empoweredBuyCount = 0;
-                if (Player.goldWallet != null)
-                {
-                    Player.goldWallet.balance = 0;
-                }
                 HubEventHandler.cursePurchased = false;
                 GameController.stageCount = 0;
                 GameController.tierCount = 0;
@@ -189,22 +185,88 @@ namespace WoLArchipelago.Patches
                 GameController.resetHubVars = true;
 
                 GameController.LoadLevel("Hub");
+                
+                ResetPlayer();
+            }
+        }
 
-                Player player = ItemHandler.GetActivePlayer();
+        private static void ResetPlayer()
+        {
+            Player player = ItemHandler.GetActivePlayer();
+            if (player == null)
+                return;
 
-                ItemHandler.SyncPlayerMaxHP(player, true);
+            if (Player.goldWallet != null)
+                Player.goldWallet.balance = 0;
 
-                player.inventory.ClearInventory();
+            if (Player.goldDebtWallet != null)
+                Player.goldDebtWallet.balance = 0;
 
-                player.GiveDesignatedItem();
+            player.playerData = GameDataManager.gameData.GetPlayerData(player.playerID);
 
-                foreach (string relicId in DataManager.SavedHubRelics)
+            foreach (Player.SkillState state in player.skillsDict.Values)
+            {
+                if (state == null) continue;
+                state.SetSkillLevel(1);
+                state.isUltimate = false;
+                state.isSignature = false;
+                state.SetEmpowered(false, EmpowerStatMods.DefaultEmpowerMod);
+            }
+            player.stockSkill = null;
+
+            player.InitSkills();
+
+            ResetOutfitEnhancement(player);
+            if (!player.EquipOutfit(player.playerData.outfitName))
+                player.EquipOutfit("default");
+
+            player.inventory.ClearInventory();
+            player.GiveDesignatedItem(string.Empty);
+
+            foreach (string relicId in DataManager.SavedHubRelics)
+            {
+                if (relicId != player.designatedItemID && !player.inventory.ContainsItem(relicId))
+                    player.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
+            }
+            ItemHandler.SyncPlayerMaxHP(player, true);
+        }
+
+        private static void ResetOutfitEnhancement(Player player)
+        {
+            try
+            {
+                bool prdFlag = RunData.prdDict.ContainsKey(player.playerID)
+                            && RunData.prdDict[player.playerID] != null
+                            && RunData.prdDict[player.playerID].outFitEnhanced;
+
+                if (!player.outfitEnhanced && !prdFlag)
+                    return;
+
+                Outfit current = player.equippedOutfit;
+                Outfit fresh = Outfit.GetAvailableOutfit(player.outfitID);
+
+                if (current != null)
+                    current.SetEquipStatus(player, false);
+
+                if (fresh != null)
                 {
-                    if (relicId != player.designatedItemID && !player.inventory.ContainsItem(relicId))
-                    {
-                        player.inventory.AddItem(relicId, showNotice: false, ignoreMax: true);
-                    }
+                    fresh.SetEquipStatus(player, true);
+                    player.equippedOutfit = fresh;
                 }
+
+                player.outfitEnhanced = false;
+
+                if (RunData.prdDict.ContainsKey(player.playerID) && RunData.prdDict[player.playerID] != null)
+                    RunData.prdDict[player.playerID].outFitEnhanced = false;
+
+                FieldInfo f = typeof(TailorNpc).GetField("playerBuffed", BindingFlags.NonPublic | BindingFlags.Static);
+                bool[] buffed = f != null ? f.GetValue(null) as bool[] : null;
+                if (buffed != null && player.playerID < buffed.Length)
+                    buffed[player.playerID] = false;
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AP] Error resetting outfit enhancement: {ex}");
             }
         }
     }

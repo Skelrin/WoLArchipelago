@@ -52,7 +52,7 @@ namespace WoLArchipelago
             StatusMessage = "Disconnected";
 
             StorageService.InitProfile();
-            ItemHandler.CachedItems.Clear();
+            ItemHandler.CachedItems = [];
 
             _offlineCheckQueue = _storageService.LoadPendingChecks(_checkedLocations);
             _itemsReceivedIndex = _storageService.LoadItemIndex();
@@ -131,12 +131,11 @@ namespace WoLArchipelago
                 _checkedLocations.Clear();
                 _offlineCheckQueue.Clear();
                 _itemsToProcess.Clear();
-                ItemHandler.CachedItems.Clear();
 
                 _itemsReceivedIndex = _storageService.LoadItemIndex();
                 _offlineCheckQueue = _storageService.LoadPendingChecks(_checkedLocations);
 
-                ItemHandler.CachedItems.AddRange(Session.Items.AllItemsReceived);
+                ItemHandler.CachedItems = [.. Session.Items.AllItemsReceived];
 
                 // Enqueue items received while offline or unprocessed
                 while (_itemsReceivedIndex < Session.Items.AllItemsReceived.Count)
@@ -285,6 +284,8 @@ namespace WoLArchipelago
         {
             lock (_lockObject)
             {
+                if (ScoutedLocations != null && ScoutedLocations.Count > 0 && !ScoutedLocations.ContainsKey(locationId)) return;
+
                 if (!_checkedLocations.Add(locationId)) return;
 
                 if (IsConnected && Session != null)
@@ -366,8 +367,7 @@ namespace WoLArchipelago
         {
             lock (_lockObject)
             {
-                ItemHandler.CachedItems.Clear();
-                ItemHandler.CachedItems.AddRange(helper.AllItemsReceived);
+                ItemHandler.CachedItems = [.. helper.AllItemsReceived];
 
                 while (_itemsReceivedIndex < helper.AllItemsReceived.Count)
                 {
