@@ -122,7 +122,7 @@ namespace WoLArchipelago
                 GameDataManager.Load();
                 if (ArchipelagoUI.Instance != null)
                 {
-                    ArchipelagoUI.Instance.ToggleHasConnectedOnce();
+                    ArchipelagoUI.Instance.MarkConnectedOnce();
                 }
             });
 
@@ -143,7 +143,6 @@ namespace WoLArchipelago
                     ItemInfo item = Session.Items.AllItemsReceived[_itemsReceivedIndex];
                     _itemsToProcess.Enqueue(item.ItemId);
                     _itemsReceivedIndex++;
-                    _storageService.SaveItemIndex(_itemsReceivedIndex);
                 }
 
                 DataManager.LoadData();
@@ -374,7 +373,6 @@ namespace WoLArchipelago
                     ItemInfo item = helper.AllItemsReceived[_itemsReceivedIndex];
                     _itemsToProcess.Enqueue(item.ItemId);
                     _itemsReceivedIndex++;
-                    _storageService.SaveItemIndex(_itemsReceivedIndex);
                 }
             }
         }
@@ -386,11 +384,15 @@ namespace WoLArchipelago
         {
             lock (_lockObject)
             {
+                if (_itemsToProcess.Count == 0 || !ItemHandler.IsReadyForItems()) return;
+
                 while (_itemsToProcess.Count > 0)
                 {
-                    long itemId = _itemsToProcess.Dequeue();
-                    ItemHandler.GrantPlayerAPItem(itemId);
+                    long id = _itemsToProcess.Dequeue();
+                    try { ItemHandler.GrantPlayerAPItem(id); }
+                    catch (Exception ex) { Plugin.Log.LogError(string.Format("[AP] Grant failed for {0}: {1}", id, ex)); }
                 }
+                _storageService.SaveItemIndex(_itemsReceivedIndex);
             }
         }
 

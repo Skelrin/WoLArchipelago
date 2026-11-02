@@ -260,18 +260,22 @@ namespace WoLArchipelago.Services
             }
         }
 
-        private static bool IsSkillUnlocked(Player player, string skillName)
+        private static bool IsSkillUnlocked(Player player, string skillId)
         {
-            if (player.skillStates == null) return false;
+            return player.skillsDict != null
+                && player.skillsDict.TryGetValue(skillId, out Player.SkillState state)
+                && state != null && state.isUnlocked;
+        }
 
-            foreach (var state in player.skillStates)
-            {
-                if (state != null && state.GetType().Name.IndexOf(skillName, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return state.isUnlocked;
-                }
-            }
-            return false;
+        /// <summary>
+        /// Checks if the player is correctly instantiated, not in a loading screen and alive to correctly receeive items.
+        /// </summary>
+        public static bool IsReadyForItems()
+        {
+            if (LoadingScreen.loading) return false;
+            if (!DataManager.IsStartingInventoryApplied) return false;
+
+            return GetActivePlayer(true);
         }
 
         /// <summary>

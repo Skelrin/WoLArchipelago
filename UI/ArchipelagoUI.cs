@@ -47,9 +47,9 @@ namespace WoLArchipelago
             }
         }
 
-        public void ToggleHasConnectedOnce()
+        public void MarkConnectedOnce()
         {
-            _hasConnectedOnce = !_hasConnectedOnce;
+            _hasConnectedOnce = true;
         }
 
         public void Toggle()
